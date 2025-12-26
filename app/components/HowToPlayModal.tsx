@@ -73,18 +73,18 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
                   <span>Wrong</span>
                 </p>
               </div>
-              {/* Compact inline example */}
-              <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-text-tertiary">e.g.</span>
-                <div className="flex gap-0.5">
-                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
-                  <span className="w-4 h-4 rounded-sm bg-incorrect"></span>
-                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
-                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
-                  <span className="w-4 h-4 rounded-sm bg-incorrect"></span>
-                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
+              {/* Vertical example - matches actual game layout */}
+              <div className="flex items-start gap-3 mt-3">
+                <span className="text-xs text-text-tertiary pt-0.5">e.g.</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="w-16 h-3 rounded-sm bg-correct"></span>
+                  <span className="w-16 h-3 rounded-sm bg-incorrect"></span>
+                  <span className="w-16 h-3 rounded-sm bg-correct"></span>
+                  <span className="w-16 h-3 rounded-sm bg-correct"></span>
+                  <span className="w-16 h-3 rounded-sm bg-incorrect"></span>
+                  <span className="w-16 h-3 rounded-sm bg-correct"></span>
                 </div>
-                <span className="text-xs text-text-tertiary">= 4/6 correct</span>
+                <span className="text-xs text-text-tertiary pt-0.5">4/6 correct</span>
               </div>
             </div>
           </div>
