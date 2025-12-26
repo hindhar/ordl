@@ -56,37 +56,35 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
             </div>
           </div>
 
-          {/* Step 3 - Color meaning with example beside it */}
+          {/* Step 3 - Color meaning */}
           <div className="flex gap-3 items-start">
             <div className="w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center flex-shrink-0 font-display font-bold text-sm">
               3
             </div>
-            <div className="flex gap-4 flex-1">
-              {/* Feedback explanation */}
-              <div className="flex-1">
-                <p className="font-medium text-text-primary">Check feedback</p>
-                <div className="text-sm text-text-secondary space-y-1 mt-1">
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block w-5 h-5 rounded bg-correct flex-shrink-0"></span>
-                    <span>= Correct</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <span className="inline-block w-5 h-5 rounded bg-incorrect flex-shrink-0"></span>
-                    <span>= Try again</span>
-                  </p>
-                </div>
+            <div>
+              <p className="font-medium text-text-primary">Check feedback</p>
+              <div className="flex gap-6 mt-2">
+                <p className="flex items-center gap-2 text-sm text-text-secondary">
+                  <span className="inline-block w-4 h-4 rounded bg-correct flex-shrink-0"></span>
+                  <span>Correct</span>
+                </p>
+                <p className="flex items-center gap-2 text-sm text-text-secondary">
+                  <span className="inline-block w-4 h-4 rounded bg-incorrect flex-shrink-0"></span>
+                  <span>Wrong</span>
+                </p>
               </div>
-              {/* Example - vertical grid */}
-              <div className="p-3 bg-neutral rounded-xl flex-shrink-0">
-                <p className="text-[10px] text-text-secondary uppercase tracking-wide mb-2 text-center">Example</p>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-base">🟩</span>
-                  <span className="text-base">🟥</span>
-                  <span className="text-base">🟩</span>
-                  <span className="text-base">🟩</span>
-                  <span className="text-base">🟥</span>
-                  <span className="text-base">🟩</span>
+              {/* Compact inline example */}
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-xs text-text-tertiary">e.g.</span>
+                <div className="flex gap-0.5">
+                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
+                  <span className="w-4 h-4 rounded-sm bg-incorrect"></span>
+                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
+                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
+                  <span className="w-4 h-4 rounded-sm bg-incorrect"></span>
+                  <span className="w-4 h-4 rounded-sm bg-correct"></span>
                 </div>
+                <span className="text-xs text-text-tertiary">= 4/6 correct</span>
               </div>
             </div>
           </div>
