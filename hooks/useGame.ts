@@ -37,6 +37,12 @@ export interface GameState {
   isSimulation: boolean;
   totalPuzzles: number;
   maxArchivePuzzle: number;
+  // Reveal animation state
+  isRevealing: boolean;
+  revealedResultIndex: number; // -1 = none, 0-5 = revealed up to this index
+  isRevealingDates: boolean;
+  revealedDateIndex: number;
+  pendingResults: boolean[] | null;
 }
 
 export interface GameActions {
@@ -111,6 +117,13 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   const [hasChangedSinceLastSubmit, setHasChangedSinceLastSubmit] = useState(true);
   const [isSimulation, setIsSimulation] = useState(false);
   const [totalPuzzles, setTotalPuzzles] = useState(70);
+
+  // Reveal animation state
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [revealedResultIndex, setRevealedResultIndex] = useState(-1);
+  const [isRevealingDates, setIsRevealingDates] = useState(false);
+  const [revealedDateIndex, setRevealedDateIndex] = useState(-1);
+  const [pendingResults, setPendingResults] = useState<boolean[] | null>(null);
 
   // Calculate max archive puzzle (today - 1)
   const maxArchivePuzzle = Math.max(0, todaysPuzzle - 1);
@@ -229,9 +242,12 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     [status]
   );
 
-  // Submit current order (now async - calls API)
+  // Helper to delay execution
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  // Submit current order (now async - calls API with reveal animation)
   const submitOrder = useCallback(async () => {
-    if (status !== 'playing') return;
+    if (status !== 'playing' || isRevealing) return;
 
     // Call API to check order
     const checkResult = await checkOrder(
@@ -245,56 +261,77 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     }
 
     const results = checkResult.results.map(r => r.correct);
+    const guessNumber = attempts.length + 1;
+    const isGameOver = checkResult.allCorrect || guessNumber >= MAX_GUESSES;
 
-    // Find ALL correct positions
+    // Store pending results and start reveal animation
+    setPendingResults(results);
+    setIsRevealing(true);
+    setRevealedResultIndex(-1);
+    setHasChangedSinceLastSubmit(false);
+
+    // Reveal results one by one (360ms each - 20% slower)
+    for (let i = 0; i < EVENTS_PER_PUZZLE; i++) {
+      await delay(360);
+      setRevealedResultIndex(i);
+    }
+
+    // Small pause after all results revealed
+    await delay(480);
+
+    // Update attempts history and lock correct positions
+    const newAttempts = [...attempts, results];
+    setAttempts(newAttempts);
+    setLastSubmitResults(results);
+
     const correctPositions = results
       .map((correct, index) => ({ correct, index }))
       .filter(({ correct }) => correct)
       .map(({ index }) => index);
 
-    // This is a new guess
-    const guessNumber = attempts.length + 1;
-
-    // Update attempts history
-    const newAttempts = [...attempts, results];
-    setAttempts(newAttempts);
-    setLastSubmitResults(results);
-    setHasChangedSinceLastSubmit(false);
-
-    // Always lock correct positions immediately
     setLockedPositions(correctPositions);
 
-    if (checkResult.allCorrect) {
-      // Win! Fetch solution to show dates
-      setStatus('won');
+    // Handle game over
+    if (isGameOver) {
+      const won = checkResult.allCorrect;
+      setStatus(won ? 'won' : 'lost');
+
       if (!isSimulation) {
-        const newStats = updateStatsAfterGame(true, guessNumber);
+        const newStats = updateStatsAfterGame(won, won ? guessNumber : undefined);
         setStats(newStats);
       }
+
+      // Fetch solution and reveal dates one by one
       const solution = await fetchSolution(puzzleNumber);
       if (solution) {
         setCurrentOrder(solution);
         setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
-      }
-    } else if (guessNumber >= MAX_GUESSES) {
-      // Out of guesses - game over, fetch solution
-      setStatus('lost');
-      if (!isSimulation) {
-        const newStats = updateStatsAfterGame(false);
-        setStats(newStats);
-      }
-      const solution = await fetchSolution(puzzleNumber);
-      if (solution) {
-        setCurrentOrder(solution);
-        setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
+
+        // Start date reveal animation (480ms each - 20% slower)
+        setIsRevealingDates(true);
+        setRevealedDateIndex(-1);
+
+        for (let i = 0; i < EVENTS_PER_PUZZLE; i++) {
+          await delay(480);
+          setRevealedDateIndex(i);
+        }
+
+        await delay(360);
+        setIsRevealingDates(false);
       }
     }
+
+    // End reveal animation
+    setIsRevealing(false);
+    setPendingResults(null);
+    setRevealedResultIndex(-1);
   }, [
     status,
     currentOrder,
     puzzleNumber,
     attempts,
     isSimulation,
+    isRevealing,
   ]);
 
   // Reset current puzzle
@@ -400,6 +437,12 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     isSimulation,
     totalPuzzles,
     maxArchivePuzzle,
+    // Reveal animation state
+    isRevealing,
+    revealedResultIndex,
+    isRevealingDates,
+    revealedDateIndex,
+    pendingResults,
     reorderEvents,
     submitOrder,
     resetGame,

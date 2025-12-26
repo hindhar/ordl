@@ -48,12 +48,12 @@ export const StatsDisplay = ({ stats, lastGuessCount }: StatsDisplayProps) => {
                 <div className="flex-grow h-4 bg-neutral rounded overflow-hidden">
                   <div
                     className={`h-full flex items-center justify-end px-1.5 rounded transition-all ${
-                      isHighlighted ? 'bg-correct' : 'bg-border'
+                      count > 0 ? 'bg-correct' : 'bg-border'
                     }`}
                     style={{ width: `${Math.max(percentage, count > 0 ? 8 : 0)}%` }}
                   >
                     {count > 0 && (
-                      <span className={`text-[10px] font-bold ${isHighlighted ? 'text-white' : 'text-text-primary'}`}>
+                      <span className="text-[10px] font-bold text-white">
                         {count}
                       </span>
                     )}

@@ -28,6 +28,12 @@ interface EventListProps {
   lastSubmitResults: boolean[] | null;
   status: 'playing' | 'won' | 'lost';
   onReorder: (newEvents: ClientEvent[]) => void;
+  // Reveal animation props
+  isRevealing?: boolean;
+  revealedResultIndex?: number;
+  isRevealingDates?: boolean;
+  revealedDateIndex?: number;
+  pendingResults?: boolean[] | null;
 }
 
 export const EventList = ({
@@ -36,6 +42,11 @@ export const EventList = ({
   lastSubmitResults,
   status,
   onReorder,
+  isRevealing = false,
+  revealedResultIndex = -1,
+  isRevealingDates = false,
+  revealedDateIndex = -1,
+  pendingResults = null,
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -176,6 +187,11 @@ export const EventList = ({
                   isCorrect={isCorrect}
                   isIncorrect={isIncorrect}
                   showDate={isGameOver}
+                  // Reveal animation props
+                  isRevealing={isRevealing}
+                  isRevealed={index <= revealedResultIndex}
+                  pendingResult={pendingResults ? pendingResults[index] : null}
+                  isDateRevealed={index <= revealedDateIndex}
                 />
               );
             })}

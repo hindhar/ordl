@@ -62,6 +62,12 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     isSimulation,
     totalPuzzles,
     maxArchivePuzzle,
+    // Reveal animation state
+    isRevealing,
+    revealedResultIndex,
+    isRevealingDates,
+    revealedDateIndex,
+    pendingResults,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -79,6 +85,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
 
   const isSubmitDisabled =
     status !== 'playing' ||
+    isRevealing ||
     (!hasChangedSinceLastSubmit && attempts.length > 0);
 
   const handlePrevPuzzle = () => {
@@ -117,6 +124,11 @@ export const Game = ({ initialPuzzle }: GameProps) => {
           lastSubmitResults={lastSubmitResults}
           status={status}
           onReorder={reorderEvents}
+          isRevealing={isRevealing}
+          revealedResultIndex={revealedResultIndex}
+          isRevealingDates={isRevealingDates}
+          revealedDateIndex={revealedDateIndex}
+          pendingResults={pendingResults}
         />
 
         {status === 'playing' && (
@@ -173,7 +185,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
       </main>
 
       <ResultModal
-        isOpen={status !== 'playing' && !modalDismissed}
+        isOpen={status !== 'playing' && !modalDismissed && !isRevealing}
         won={status === 'won'}
         puzzleNumber={puzzleNumber}
         attempts={attempts}
