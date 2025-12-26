@@ -37,31 +37,38 @@ export const EventCard = ({
   const [isFlipping, setIsFlipping] = useState(false);
   const wasRevealedRef = useRef(false);
   const prevIsRevealingRef = useRef(false);
+  const wasLockedAtRevealStartRef = useRef(isLocked);
 
-  // Reset when a NEW reveal sequence starts (isRevealing transitions from false to true)
+  // When a NEW reveal sequence starts, capture locked state and reset reveal tracking
   useEffect(() => {
     if (isRevealing && !prevIsRevealingRef.current) {
-      // New reveal sequence started - reset for all cards
-      wasRevealedRef.current = false;
+      // New reveal sequence starting - capture whether this card is already locked
+      wasLockedAtRevealStartRef.current = isLocked;
+      // Only reset wasRevealed for non-locked cards (locked cards don't need to flip)
+      if (!isLocked) {
+        wasRevealedRef.current = false;
+      }
     }
     prevIsRevealingRef.current = isRevealing;
-  }, [isRevealing]);
+  }, [isRevealing, isLocked]);
 
   // Trigger flip animation when this card is revealed
-  // Skip animation only if card was already locked from a PREVIOUS guess (not current reveal)
+  // Skip animation if card was already locked at the start of this reveal sequence
   useEffect(() => {
     if (isRevealed && !wasRevealedRef.current) {
-      // Only skip flip for cards that were locked BEFORE this reveal started
-      // (they're already showing as correct from previous guesses)
-      const wasLockedBeforeReveal = isLocked && !isRevealing;
-      if (!wasLockedBeforeReveal) {
+      // Only flip cards that were NOT locked when the reveal started
+      // (locked cards are already showing as correct from previous guesses)
+      if (!wasLockedAtRevealStartRef.current) {
         setIsFlipping(true);
         wasRevealedRef.current = true;
         const timer = setTimeout(() => setIsFlipping(false), 600);
         return () => clearTimeout(timer);
+      } else {
+        // Card was locked at reveal start - mark as revealed but don't animate
+        wasRevealedRef.current = true;
       }
     }
-  }, [isRevealed, isLocked, isRevealing]);
+  }, [isRevealed]);
 
   const {
     attributes,
