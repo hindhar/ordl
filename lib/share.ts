@@ -24,25 +24,19 @@ export const generateGridRows = (attempts: boolean[][]): string[] => {
   return rows;
 };
 
-// Generate the share text with emoji grid - optimized for virality
+// Generate the share text with emoji grid - clean and simple
 export const generateShareText = (data: ShareData): string => {
-  const { puzzleNumber, attempts, won, streak, isSimulation } = data;
-
-  // Score format like Wordle: attempts/max or X for loss
-  const score = won ? `${attempts.length}/4` : 'X/4';
+  const { puzzleNumber, attempts, isSimulation } = data;
 
   // Build grid: 6 rows (positions) x up to 4 columns (guesses)
   const grid = generateGridRows(attempts).join('\n');
 
-  // Streak prominently displayed for social proof (only for non-practice games)
-  const streakLine = !isSimulation && streak > 1 ? `\n🔥 ${streak} day streak!` : '';
-
-  // Practice mode indicator
+  // Puzzle label
   const puzzleLabel = isSimulation ? `Ordl Practice #${puzzleNumber}` : `Ordl #${puzzleNumber}`;
 
-  return `${puzzleLabel} ${score}
+  return `${puzzleLabel}
 
-${grid}${streakLine}
+${grid}
 
 Play Ordl at ordl.io`;
 };
@@ -83,10 +77,9 @@ export const shareResults = async (data: ShareData): Promise<{ success: boolean;
   // Try native share API first (primarily for mobile)
   if (typeof navigator !== 'undefined' && navigator.share) {
     try {
+      // Only pass text - URL is already in the text, avoids duplication in WhatsApp etc.
       await navigator.share({
-        title: 'Ordl - Order History Daily',
         text: shareText,
-        url: 'https://ordl.io'
       });
       return { success: true, method: 'native' };
     } catch (err) {
