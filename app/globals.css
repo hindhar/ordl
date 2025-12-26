@@ -1,0 +1,321 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Refined warm palette - sophisticated & crafted */
+  --bg-primary: #FAF9F6;        /* Warm white - paper-like */
+  --bg-secondary: #FFFFFF;      /* Pure white - cards */
+  --bg-tertiary: #F5F4F0;       /* Warm grey - subtle sections */
+
+  --text-primary: #1A1A19;      /* Near black - crisp text */
+  --text-secondary: #6B6B66;    /* Warm grey - muted text */
+  --text-tertiary: #9A9A94;     /* Light grey - hints */
+
+  --accent: #2D5A4A;            /* Deep forest green - sophisticated */
+  --accent-hover: #234839;      /* Darker forest */
+  --accent-light: #3D7A64;      /* Lighter forest */
+
+  --correct: #2D5A4A;           /* Forest green - correct (unified) */
+  --correct-bg: #E8F0EC;        /* Soft sage background */
+  --correct-border: #4A8B73;    /* Mid-tone green border */
+  --incorrect: #C4553D;         /* Burnt sienna - warm error */
+  --incorrect-bg: #FDF4F2;      /* Soft coral background */
+
+  --border: #E8E7E3;            /* Warm light border */
+  --border-dark: #C5C4BE;       /* Warm emphasis border */
+
+  --neutral: #F0EFEB;           /* Warm neutral */
+  --shadow: rgba(26, 26, 25, 0.06);
+  --shadow-hover: rgba(26, 26, 25, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body {
+  font-family: var(--font-body), 'Georgia', serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-body), 'Georgia', serif;
+}
+
+/* Masthead styling */
+.masthead {
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.masthead-letter {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.masthead:hover .masthead-letter {
+  animation: letterBounce 0.4s ease;
+}
+
+.masthead:hover .masthead-letter:nth-child(1) { animation-delay: 0s; }
+.masthead:hover .masthead-letter:nth-child(2) { animation-delay: 0.05s; }
+.masthead:hover .masthead-letter:nth-child(3) { animation-delay: 0.1s; }
+.masthead:hover .masthead-letter:nth-child(4) { animation-delay: 0.15s; }
+
+@keyframes letterBounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Event card - refined & crafted */
+.event-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  touch-action: none;
+  position: relative;
+}
+
+.event-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.event-card:hover:not(.locked):not(.dragging) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px var(--shadow-hover), 0 2px 8px var(--shadow);
+}
+
+.event-card.dragging {
+  transform: scale(1.02) rotate(1deg);
+  box-shadow: 0 16px 40px rgba(26, 26, 25, 0.18), 0 4px 12px var(--shadow);
+  z-index: 100;
+  cursor: grabbing !important;
+  border-color: var(--accent) !important;
+}
+
+.event-card.locked {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Lock animation - plays when card becomes locked */
+@keyframes lockIn {
+  0% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.03);
+  }
+  30% {
+    transform: scale(0.98);
+  }
+  50% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes checkmarkDraw {
+  0% {
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.event-card.locked.just-locked {
+  animation: lockIn 0.4s ease-out;
+}
+
+.event-card.locked .checkmark-icon {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+}
+
+.event-card.locked.just-locked .checkmark-icon {
+  animation: checkmarkDraw 0.4s ease-out;
+}
+
+/* Locked card styling - elegant success state */
+.event-card.locked {
+  background: linear-gradient(135deg, var(--correct-bg) 0%, #FFFFFF 100%);
+  border-color: var(--correct-border);
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Button styles - refined & tactile */
+.btn-primary {
+  background-color: var(--accent);
+  color: white;
+  font-weight: 600;
+  font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  padding: 0.875rem 2.5rem;
+  border-radius: 0.625rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(45, 90, 74, 0.15);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(45, 90, 74, 0.25);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 4px rgba(45, 90, 74, 0.15);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-primary:disabled:hover {
+  background-color: var(--accent);
+  transform: none;
+}
+
+/* Guess indicators - refined pips */
+.guess-pip {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guess-pip.used {
+  background-color: var(--incorrect);
+  box-shadow: 0 0 0 2px var(--incorrect-bg);
+}
+
+.guess-pip.available {
+  background-color: var(--border-dark);
+  opacity: 0.4;
+}
+
+/* Subtle pulse animation for available guesses */
+@keyframes subtlePulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.6; }
+}
+
+.guess-pip.available:first-of-type:not(:only-of-type) {
+  animation: subtlePulse 2s ease-in-out infinite;
+}
+
+/* Share emoji grid */
+.share-grid {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  line-height: 1.5;
+  letter-spacing: 0.15em;
+}
+
+/* Focus states for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: pageIn 0.3s ease-out;
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--correct-bg);
+  color: var(--text-primary);
+}
