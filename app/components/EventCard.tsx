@@ -1,12 +1,11 @@
 'use client';
 
 import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { useState, useEffect, useRef } from 'react';
-import { HistoricalEvent } from '@/lib/events';
+import { ClientEvent } from '@/hooks/useGame';
 
 interface EventCardProps {
-  event: HistoricalEvent;
+  event: ClientEvent;
   index: number;
   isLocked: boolean;
   isCorrect: boolean | null;
@@ -47,10 +46,13 @@ export const EventCard = ({
     disabled: isLocked,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+  const style: React.CSSProperties = {
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+    transition: isDragging ? 'none' : transition,
     zIndex: isDragging ? 100 : 'auto',
+    willChange: isDragging ? 'transform' : 'auto',
   };
 
   // Determine styling based on state

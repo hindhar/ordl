@@ -19,15 +19,15 @@ import {
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { useState } from 'react';
-import { HistoricalEvent } from '@/lib/events';
+import { ClientEvent } from '@/hooks/useGame';
 import { EventCard } from './EventCard';
 
 interface EventListProps {
-  events: HistoricalEvent[];
+  events: ClientEvent[];
   lockedPositions: number[];
   lastSubmitResults: boolean[] | null;
   status: 'playing' | 'won' | 'lost';
-  onReorder: (newEvents: HistoricalEvent[]) => void;
+  onReorder: (newEvents: ClientEvent[]) => void;
 }
 
 export const EventList = ({
@@ -42,13 +42,13 @@ export const EventList = ({
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 8,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 100,
-        tolerance: 5,
+        delay: 0,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
