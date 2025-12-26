@@ -60,6 +60,43 @@ export const EventList = ({
     setActiveId(event.active.id as string);
   };
 
+  // Custom reorder that keeps locked items fixed and only rearranges unlocked items
+  const reorderWithLockedPositions = (
+    items: ClientEvent[],
+    fromIndex: number,
+    toIndex: number,
+    locked: number[]
+  ): ClientEvent[] => {
+    // Get unlocked items with their current positions
+    const unlockedWithPositions: { item: ClientEvent; pos: number }[] = [];
+    items.forEach((item, index) => {
+      if (!locked.includes(index)) {
+        unlockedWithPositions.push({ item, pos: index });
+      }
+    });
+
+    // Find where in the unlocked array the from/to positions are
+    const unlockedFromIdx = unlockedWithPositions.findIndex(u => u.pos === fromIndex);
+    const unlockedToIdx = unlockedWithPositions.findIndex(u => u.pos === toIndex);
+
+    if (unlockedFromIdx === -1 || unlockedToIdx === -1) return items;
+
+    // Reorder just the unlocked items
+    const unlockedItems = unlockedWithPositions.map(u => u.item);
+    const reorderedUnlocked = arrayMove(unlockedItems, unlockedFromIdx, unlockedToIdx);
+
+    // Rebuild the full array: locked items stay in place, unlocked slots get reordered items
+    const result: ClientEvent[] = [...items];
+    let unlockedIdx = 0;
+    for (let i = 0; i < result.length; i++) {
+      if (!locked.includes(i)) {
+        result[i] = reorderedUnlocked[unlockedIdx++];
+      }
+    }
+
+    return result;
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
@@ -70,33 +107,18 @@ export const EventList = ({
 
       if (oldIndex === -1 || newIndex === -1) return;
 
-      // Don't allow moving FROM a locked position (shouldn't happen due to disabled, but safety check)
+      // Don't allow moving FROM a locked position
       if (lockedPositions.includes(oldIndex)) {
         return;
       }
 
-      // Don't allow moving TO a locked position
+      // Don't allow dropping directly ON a locked position
       if (lockedPositions.includes(newIndex)) {
         return;
       }
 
-      // CRITICAL: Don't allow any move that would SHIFT a locked item
-      // When moving from oldIndex to newIndex, items in between shift:
-      // - If moving down (oldIndex < newIndex): items in [oldIndex+1, newIndex] shift up
-      // - If moving up (oldIndex > newIndex): items in [newIndex, oldIndex-1] shift down
-      const [shiftStart, shiftEnd] = oldIndex < newIndex
-        ? [oldIndex + 1, newIndex]
-        : [newIndex, oldIndex - 1];
-
-      const wouldShiftLockedItem = lockedPositions.some(
-        pos => pos >= shiftStart && pos <= shiftEnd
-      );
-
-      if (wouldShiftLockedItem) {
-        return;
-      }
-
-      const newOrder = arrayMove(events, oldIndex, newIndex);
+      // Reorder with locked items staying fixed
+      const newOrder = reorderWithLockedPositions(events, oldIndex, newIndex, lockedPositions);
       onReorder(newOrder);
     }
   };
