@@ -11,6 +11,7 @@ interface EventCardProps {
   isCorrect: boolean | null;
   isIncorrect: boolean;
   showDate?: boolean;
+  isGameOver?: boolean;
   // Reveal animation props
   isRevealing?: boolean;
   isRevealed?: boolean;
@@ -25,6 +26,7 @@ export const EventCard = ({
   isCorrect,
   isIncorrect,
   showDate = false,
+  isGameOver = false,
   isRevealing = false,
   isRevealed = false,
   pendingResult = null,
@@ -36,14 +38,18 @@ export const EventCard = ({
   const wasRevealedRef = useRef(isRevealed);
 
   // Detect when card becomes locked and trigger animation
+  // Only animate if the card is correct (not just locked because game is over)
   useEffect(() => {
-    if (isLocked && !wasLockedRef.current) {
+    const isNewlyLocked = isLocked && !wasLockedRef.current;
+    const isCorrectCard = isCorrect === true || pendingResult === true;
+
+    if (isNewlyLocked && isCorrectCard && !isGameOver) {
       setJustLocked(true);
       const timer = setTimeout(() => setJustLocked(false), 500);
       return () => clearTimeout(timer);
     }
     wasLockedRef.current = isLocked;
-  }, [isLocked]);
+  }, [isLocked, isCorrect, pendingResult, isGameOver]);
 
   // Trigger flip animation when this card is revealed
   // Skip animation if card was already locked from a previous guess
@@ -70,15 +76,20 @@ export const EventCard = ({
 
   // Slower transition for rearrangement around locked cards
   // Keep default ease feel, just longer duration (default is ~250ms)
+  // IMPORTANT: Disable transitions during reveal and after game over to prevent
+  // cards from sliding around when order changes (e.g., when solution is shown)
   const slowerTransition = transition
     ? transition.replace(/(\d+)ms/, '400ms')
     : 'transform 400ms ease';
+
+  // Determine if we should disable transitions entirely
+  const shouldDisableTransition = isDragging || isRevealing || isGameOver;
 
   const style: React.CSSProperties = {
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
       : undefined,
-    transition: isDragging ? 'none' : slowerTransition,
+    transition: shouldDisableTransition ? 'none' : slowerTransition,
     zIndex: isDragging ? 100 : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
   };

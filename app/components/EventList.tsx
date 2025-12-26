@@ -187,6 +187,7 @@ export const EventList = ({
                   isCorrect={isCorrect}
                   isIncorrect={isIncorrect}
                   showDate={isGameOver}
+                  isGameOver={isGameOver}
                   // Reveal animation props
                   isRevealing={isRevealing}
                   isRevealed={index <= revealedResultIndex}
