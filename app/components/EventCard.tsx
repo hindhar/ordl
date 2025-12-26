@@ -17,6 +17,7 @@ interface EventCardProps {
   isRevealed?: boolean;
   pendingResult?: boolean | null;
   isDateRevealed?: boolean;
+  isSolutionRevealing?: boolean;
 }
 
 export const EventCard = ({
@@ -31,27 +32,36 @@ export const EventCard = ({
   isRevealed = false,
   pendingResult = null,
   isDateRevealed = false,
+  isSolutionRevealing = false,
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const wasRevealedRef = useRef(false);
+  const prevIsRevealingRef = useRef(false);
 
-  // Reset the revealed ref when a new reveal sequence starts
+  // Reset when a NEW reveal sequence starts (isRevealing transitions from false to true)
   useEffect(() => {
-    if (isRevealing && !isRevealed) {
+    if (isRevealing && !prevIsRevealingRef.current) {
+      // New reveal sequence started - reset for all cards
       wasRevealedRef.current = false;
     }
-  }, [isRevealing, isRevealed]);
+    prevIsRevealingRef.current = isRevealing;
+  }, [isRevealing]);
 
   // Trigger flip animation when this card is revealed
-  // Skip animation if card was already locked from a previous guess
+  // Skip animation only if card was already locked from a PREVIOUS guess (not current reveal)
   useEffect(() => {
-    if (isRevealed && !wasRevealedRef.current && !isLocked) {
-      setIsFlipping(true);
-      wasRevealedRef.current = true;
-      const timer = setTimeout(() => setIsFlipping(false), 600);
-      return () => clearTimeout(timer);
+    if (isRevealed && !wasRevealedRef.current) {
+      // Only skip flip for cards that were locked BEFORE this reveal started
+      // (they're already showing as correct from previous guesses)
+      const wasLockedBeforeReveal = isLocked && !isRevealing;
+      if (!wasLockedBeforeReveal) {
+        setIsFlipping(true);
+        wasRevealedRef.current = true;
+        const timer = setTimeout(() => setIsFlipping(false), 600);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [isRevealed, isLocked]);
+  }, [isRevealed, isLocked, isRevealing]);
 
   const {
     attributes,
@@ -113,6 +123,7 @@ export const EventCard = ({
         ${isLocked ? 'locked' : ''}
         ${isDragging ? 'dragging' : ''}
         ${isFlipping ? 'card-flip' : ''}
+        ${isSolutionRevealing ? 'solution-reveal' : ''}
         flex items-center gap-4 p-4 rounded-xl border min-h-[76px]
         select-none
       `}

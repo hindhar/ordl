@@ -34,6 +34,7 @@ interface EventListProps {
   isRevealingDates?: boolean;
   revealedDateIndex?: number;
   pendingResults?: boolean[] | null;
+  isSolutionRevealing?: boolean;
 }
 
 export const EventList = ({
@@ -47,6 +48,7 @@ export const EventList = ({
   isRevealingDates = false,
   revealedDateIndex = -1,
   pendingResults = null,
+  isSolutionRevealing = false,
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -194,6 +196,7 @@ export const EventList = ({
                   isRevealed={index <= revealedResultIndex}
                   pendingResult={pendingResults ? pendingResults[index] : null}
                   isDateRevealed={index <= revealedDateIndex}
+                  isSolutionRevealing={isSolutionRevealing}
                 />
               );
             })}

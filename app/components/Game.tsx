@@ -68,6 +68,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     isRevealingDates,
     revealedDateIndex,
     pendingResults,
+    isSolutionRevealing,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -129,6 +130,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
           isRevealingDates={isRevealingDates}
           revealedDateIndex={revealedDateIndex}
           pendingResults={pendingResults}
+          isSolutionRevealing={isSolutionRevealing}
         />
 
         {status === 'playing' && (

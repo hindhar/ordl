@@ -45,6 +45,8 @@ export interface GameState {
   isRevealingDates: boolean;
   revealedDateIndex: number;
   pendingResults: boolean[] | null;
+  // Solution reveal animation (for losing - cards fade out, rearrange, fade in green)
+  isSolutionRevealing: boolean;
 }
 
 export interface GameActions {
@@ -126,6 +128,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   const [isRevealingDates, setIsRevealingDates] = useState(false);
   const [revealedDateIndex, setRevealedDateIndex] = useState(-1);
   const [pendingResults, setPendingResults] = useState<boolean[] | null>(null);
+  const [isSolutionRevealing, setIsSolutionRevealing] = useState(false);
 
   // Calculate max archive puzzle (today - 1)
   const maxArchivePuzzle = Math.max(0, todaysPuzzle - 1);
@@ -345,10 +348,33 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
       // Fetch solution and reveal dates one by one
       const solution = await fetchSolution(puzzleNumber);
       if (solution) {
-        setCurrentOrder(solution);
-        setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
+        if (!won) {
+          // LOSING ANIMATION SEQUENCE:
+          // 1. Pause to let user see their wrong results (already shown via flip)
+          await delay(800);
 
-        // Start date reveal animation (480ms each - 20% slower)
+          // 2. Fade out cards (CSS handles the animation)
+          setIsSolutionRevealing(true);
+          await delay(350);
+
+          // 3. Rearrange to solution and mark all correct (hidden during fade)
+          setCurrentOrder(solution);
+          setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
+          setLastSubmitResults(Array(EVENTS_PER_PUZZLE).fill(true)); // All green
+
+          // 4. Fade in cards in correct order (CSS handles animation)
+          await delay(450);
+          setIsSolutionRevealing(false);
+
+          // 5. Brief pause before date reveal
+          await delay(300);
+        } else {
+          // WON - just set solution immediately (cards already in correct order)
+          setCurrentOrder(solution);
+          setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
+        }
+
+        // Start date reveal animation (480ms each)
         setIsRevealingDates(true);
         setRevealedDateIndex(-1);
 
@@ -383,6 +409,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setIsRevealingDates(false);
     setRevealedDateIndex(-1);
     setPendingResults(null);
+    setIsSolutionRevealing(false);
 
     const puzzleData = await fetchPuzzle(puzzleNumber);
     if (!puzzleData) return;
@@ -410,6 +437,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setIsRevealingDates(false);
     setRevealedDateIndex(-1);
     setPendingResults(null);
+    setIsSolutionRevealing(false);
 
     const puzzleData = await fetchPuzzle(puzzleNum);
     if (!puzzleData) return;
@@ -467,6 +495,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setIsRevealingDates(false);
     setRevealedDateIndex(-1);
     setPendingResults(null);
+    setIsSolutionRevealing(false);
 
     setIsSimulation(false);
 
@@ -538,6 +567,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     isRevealingDates,
     revealedDateIndex,
     pendingResults,
+    isSolutionRevealing,
     reorderEvents,
     submitOrder,
     resetGame,
