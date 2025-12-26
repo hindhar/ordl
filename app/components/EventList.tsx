@@ -176,7 +176,8 @@ export const EventList = ({
             {events.map((event, index) => {
               const isLocked = lockedPositions.includes(index);
               const isCorrect = lastSubmitResults ? lastSubmitResults[index] : null;
-              const isIncorrect = lastSubmitResults ? !lastSubmitResults[index] && !isLocked : false;
+              // Show red for incorrect cards even after game over (when all positions become "locked")
+              const isIncorrect = lastSubmitResults ? !lastSubmitResults[index] : false;
 
               return (
                 <EventCard
