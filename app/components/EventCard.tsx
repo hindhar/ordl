@@ -75,11 +75,9 @@ export const EventCard = ({
         ${justLocked ? 'just-locked' : ''}
         ${isDragging ? 'dragging' : ''}
         flex items-center gap-4 p-4 rounded-xl border
-        ${!isLocked ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}
         select-none
       `}
       {...attributes}
-      {...listeners}
     >
       {/* Position indicator - LEFT */}
       <div className={`
@@ -103,13 +101,20 @@ export const EventCard = ({
       </div>
 
       {/* Drag handle / Lock indicator - RIGHT */}
-      <div className="flex-shrink-0 w-6 flex flex-col items-center justify-center">
+      <div
+        className={`
+          drag-handle flex-shrink-0 flex flex-col items-center justify-center
+          ${isLocked ? 'w-6' : 'w-10 h-12 -my-2 -mr-2 rounded-lg'}
+          ${!isLocked ? 'cursor-grab active:cursor-grabbing' : ''}
+        `}
+        {...(isLocked ? {} : listeners)}
+      >
         {isLocked ? (
           <svg className="checkmark-icon w-5 h-5 text-correct" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         ) : (
-          <div className="flex flex-col gap-[3px] opacity-60 group-hover:opacity-80 transition-opacity">
+          <div className="flex flex-col gap-[3px] opacity-40 hover:opacity-70 transition-opacity">
             <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
             <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
             <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>

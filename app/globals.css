@@ -108,11 +108,27 @@ body {
   transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
               border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
               background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  touch-action: none;
+  /* Allow scrolling on the card itself - only handle blocks touch */
+  touch-action: pan-y;
   position: relative;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* Drag handle - only this element initiates drag */
+.drag-handle {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Visual feedback when touching drag handle on mobile */
+@media (hover: none) {
+  .drag-handle:active {
+    background-color: var(--neutral);
+  }
 }
 
 .event-card::before {
