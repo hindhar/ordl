@@ -69,6 +69,9 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     revealedDateIndex,
     pendingResults,
     isSolutionRevealing,
+    // Hybrid animation state
+    solutionColorMap,
+    isColorTransitioning,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -131,6 +134,8 @@ export const Game = ({ initialPuzzle }: GameProps) => {
           revealedDateIndex={revealedDateIndex}
           pendingResults={pendingResults}
           isSolutionRevealing={isSolutionRevealing}
+          solutionColorMap={solutionColorMap}
+          isColorTransitioning={isColorTransitioning}
         />
 
         {status === 'playing' && (

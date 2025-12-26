@@ -406,3 +406,34 @@ a:focus-visible {
 .solution-reveal {
   animation: solutionFade 0.8s ease-in-out;
 }
+
+/* Color transition animation - smooth fade from red/mixed to all green */
+@keyframes colorToGreen {
+  0% {
+    background-color: inherit;
+    border-color: inherit;
+  }
+  100% {
+    background-color: var(--correct-bg);
+    border-color: var(--correct-border);
+  }
+}
+
+.color-transition {
+  animation: colorToGreen 0.6s ease-in-out forwards;
+}
+
+/* Also animate the position number badge during color transition */
+.color-transition .flex-shrink-0.w-8 {
+  animation: badgeToGreen 0.6s ease-in-out forwards;
+}
+
+@keyframes badgeToGreen {
+  0% {
+    background-color: inherit;
+  }
+  100% {
+    background-color: var(--correct);
+    color: white;
+  }
+}

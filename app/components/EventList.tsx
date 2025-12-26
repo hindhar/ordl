@@ -35,6 +35,9 @@ interface EventListProps {
   revealedDateIndex?: number;
   pendingResults?: boolean[] | null;
   isSolutionRevealing?: boolean;
+  // Hybrid animation props
+  solutionColorMap?: Map<string, boolean> | null;
+  isColorTransitioning?: boolean;
 }
 
 export const EventList = ({
@@ -49,6 +52,8 @@ export const EventList = ({
   revealedDateIndex = -1,
   pendingResults = null,
   isSolutionRevealing = false,
+  solutionColorMap = null,
+  isColorTransitioning = false,
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -177,9 +182,23 @@ export const EventList = ({
           <div className="flex flex-col gap-3">
             {events.map((event, index) => {
               const isLocked = lockedPositions.includes(index);
-              const isCorrect = lastSubmitResults ? lastSubmitResults[index] : null;
-              // Show red for incorrect cards even after game over (when all positions become "locked")
-              const isIncorrect = lastSubmitResults ? !lastSubmitResults[index] : false;
+
+              // Determine card color based on animation state:
+              // 1. If solutionColorMap exists, use it (hybrid animation showing original colors after rearrange)
+              // 2. Otherwise, use lastSubmitResults
+              let isCorrect: boolean | null = null;
+              let isIncorrect = false;
+
+              if (solutionColorMap) {
+                // During hybrid animation: use color map (by event ID, not position)
+                const wasCorrectInGuess = solutionColorMap.get(event.id);
+                isCorrect = wasCorrectInGuess ?? null;
+                isIncorrect = wasCorrectInGuess === false;
+              } else if (lastSubmitResults) {
+                // Normal state: use position-based results
+                isCorrect = lastSubmitResults[index];
+                isIncorrect = !lastSubmitResults[index];
+              }
 
               return (
                 <EventCard
@@ -197,6 +216,7 @@ export const EventList = ({
                   pendingResult={pendingResults ? pendingResults[index] : null}
                   isDateRevealed={index <= revealedDateIndex}
                   isSolutionRevealing={isSolutionRevealing}
+                  isColorTransitioning={isColorTransitioning}
                 />
               );
             })}

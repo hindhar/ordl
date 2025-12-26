@@ -18,6 +18,8 @@ interface EventCardProps {
   pendingResult?: boolean | null;
   isDateRevealed?: boolean;
   isSolutionRevealing?: boolean;
+  // Hybrid animation props
+  isColorTransitioning?: boolean;
 }
 
 export const EventCard = ({
@@ -33,6 +35,7 @@ export const EventCard = ({
   pendingResult = null,
   isDateRevealed = false,
   isSolutionRevealing = false,
+  isColorTransitioning = false,
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const wasRevealedRef = useRef(false);
@@ -131,6 +134,7 @@ export const EventCard = ({
         ${isDragging ? 'dragging' : ''}
         ${isFlipping ? 'card-flip' : ''}
         ${isSolutionRevealing ? 'solution-reveal' : ''}
+        ${isColorTransitioning ? 'color-transition' : ''}
         flex items-center gap-4 p-4 rounded-xl border min-h-[76px]
         select-none
       `}
