@@ -35,17 +35,24 @@ export const EventCard = ({
   isDateRevealed = false,
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
-  const wasRevealedRef = useRef(isRevealed);
+  const wasRevealedRef = useRef(false);
+
+  // Reset the revealed ref when a new reveal sequence starts
+  useEffect(() => {
+    if (isRevealing && !isRevealed) {
+      wasRevealedRef.current = false;
+    }
+  }, [isRevealing, isRevealed]);
 
   // Trigger flip animation when this card is revealed
   // Skip animation if card was already locked from a previous guess
   useEffect(() => {
     if (isRevealed && !wasRevealedRef.current && !isLocked) {
       setIsFlipping(true);
+      wasRevealedRef.current = true;
       const timer = setTimeout(() => setIsFlipping(false), 600);
       return () => clearTimeout(timer);
     }
-    wasRevealedRef.current = isRevealed;
   }, [isRevealed, isLocked]);
 
   const {
