@@ -383,8 +383,8 @@ a:focus-visible {
   animation: dateReveal 0.48s ease-out;
 }
 
-/* FLIP rearrangement animation - cards slide to new positions */
-.flip-rearranging {
+/* Slide rearrangement animation - cards slide to new positions */
+.slide-rearranging {
   will-change: transform;
 }
 

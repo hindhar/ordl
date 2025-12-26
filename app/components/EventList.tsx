@@ -18,9 +18,12 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers';
-import { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ClientEvent } from '@/hooks/useGame';
 import { EventCard } from './EventCard';
+
+// Card height including gap (76px min-height + 12px gap)
+const CARD_HEIGHT = 88;
 
 interface EventListProps {
   events: ClientEvent[];
@@ -38,7 +41,7 @@ interface EventListProps {
   // Hybrid animation props
   solutionColorMap?: Map<string, boolean> | null;
   isColorTransitioning?: boolean;
-  // FLIP rearrangement animation
+  // Slide rearrangement animation
   isAnimatingRearrangement?: boolean;
   preRearrangeOrder?: ClientEvent[] | null;
 }
@@ -62,61 +65,38 @@ export const EventList = ({
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // FLIP animation: store positions before rearrangement
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const previousPositions = useRef<Map<string, DOMRect>>(new Map());
-  const [flipTransforms, setFlipTransforms] = useState<Map<string, { x: number; y: number }>>(new Map());
+  // Track animation phase: 'offset' = cards at old positions, 'animating' = transitioning to new
+  const [animationPhase, setAnimationPhase] = useState<'idle' | 'offset' | 'animating'>('idle');
 
-  // Capture positions when preRearrangeOrder is set (before the rearrangement)
+  // When rearrangement starts, begin at offset phase, then trigger animation
   useEffect(() => {
-    if (preRearrangeOrder && preRearrangeOrder.length > 0) {
-      // Store current positions of all cards
-      const positions = new Map<string, DOMRect>();
-      cardRefs.current.forEach((element, eventId) => {
-        positions.set(eventId, element.getBoundingClientRect());
-      });
-      previousPositions.current = positions;
-    }
-  }, [preRearrangeOrder]);
+    if (isAnimatingRearrangement && preRearrangeOrder) {
+      // Phase 1: Apply offset to show cards at their old positions
+      setAnimationPhase('offset');
 
-  // Apply FLIP animation after DOM updates
-  useLayoutEffect(() => {
-    if (isAnimatingRearrangement && previousPositions.current.size > 0) {
-      // Calculate transforms: where each card needs to animate FROM
-      const transforms = new Map<string, { x: number; y: number }>();
-
-      cardRefs.current.forEach((element, eventId) => {
-        const previousRect = previousPositions.current.get(eventId);
-        const currentRect = element.getBoundingClientRect();
-
-        if (previousRect) {
-          // Calculate the delta - how far it moved
-          const deltaX = previousRect.left - currentRect.left;
-          const deltaY = previousRect.top - currentRect.top;
-
-          if (deltaX !== 0 || deltaY !== 0) {
-            transforms.set(eventId, { x: deltaX, y: deltaY });
-          }
-        }
-      });
-
-      setFlipTransforms(transforms);
-
-      // After a frame, trigger the animation by clearing transforms
+      // Phase 2: After a frame, start animating to new positions
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setFlipTransforms(new Map());
+          setAnimationPhase('animating');
         });
       });
+    } else {
+      setAnimationPhase('idle');
     }
-  }, [isAnimatingRearrangement, events]);
+  }, [isAnimatingRearrangement, preRearrangeOrder]);
 
-  // Clear transforms when animation ends
-  useEffect(() => {
-    if (!isAnimatingRearrangement) {
-      previousPositions.current.clear();
-    }
-  }, [isAnimatingRearrangement]);
+  // Calculate offset for a card based on index difference
+  const getSlideOffset = (eventId: string): number => {
+    if (animationPhase !== 'offset' || !preRearrangeOrder) return 0;
+
+    const oldIndex = preRearrangeOrder.findIndex(e => e.id === eventId);
+    const newIndex = events.findIndex(e => e.id === eventId);
+
+    if (oldIndex === -1 || newIndex === -1) return 0;
+
+    // Card needs to appear at its OLD position, so offset by difference
+    return (oldIndex - newIndex) * CARD_HEIGHT;
+  };
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -261,16 +241,18 @@ export const EventList = ({
                 isIncorrect = !lastSubmitResults[index];
               }
 
-              // Get FLIP transform for this card
-              const flipTransform = flipTransforms.get(event.id);
-              const flipStyle: React.CSSProperties = flipTransform
+              // Calculate slide animation style
+              const slideOffset = getSlideOffset(event.id);
+              const slideStyle: React.CSSProperties = animationPhase === 'offset'
                 ? {
-                    transform: `translate3d(${flipTransform.x}px, ${flipTransform.y}px, 0)`,
+                    // Offset phase: position cards at their OLD locations (no transition)
+                    transform: `translateY(${slideOffset}px)`,
                     transition: 'none',
                   }
-                : isAnimatingRearrangement && flipTransforms.size === 0
+                : animationPhase === 'animating'
                   ? {
-                      transform: 'translate3d(0, 0, 0)',
+                      // Animating phase: slide to new positions
+                      transform: 'translateY(0)',
                       transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)',
                     }
                   : {};
@@ -278,15 +260,8 @@ export const EventList = ({
               return (
                 <div
                   key={event.id}
-                  ref={(el) => {
-                    if (el) {
-                      cardRefs.current.set(event.id, el);
-                    } else {
-                      cardRefs.current.delete(event.id);
-                    }
-                  }}
-                  style={flipStyle}
-                  className={isAnimatingRearrangement ? 'flip-rearranging' : ''}
+                  style={slideStyle}
+                  className={animationPhase !== 'idle' ? 'slide-rearranging' : ''}
                 >
                   <EventCard
                     event={event}
