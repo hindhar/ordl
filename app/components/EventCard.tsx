@@ -12,7 +12,6 @@ interface EventCardProps {
   isIncorrect: boolean;
   showDate?: boolean;
   isGameOver?: boolean;
-  hasLockedCards?: boolean; // Whether any cards are locked (for transition speed)
   // Reveal animation props
   isRevealing?: boolean;
   isRevealed?: boolean;
@@ -28,7 +27,6 @@ export const EventCard = ({
   isIncorrect,
   showDate = false,
   isGameOver = false,
-  hasLockedCards = false,
   isRevealing = false,
   isRevealed = false,
   pendingResult = null,
@@ -67,15 +65,10 @@ export const EventCard = ({
     disabled: isLocked,
   });
 
-  // Transition logic:
-  // - No transition for normal drags (instant snap feels cleaner)
-  // - Only use transition when rearranging around locked cards (smooth flow)
-  // - Never transition during reveal or game over
-  const shouldDisableTransition = isDragging || isRevealing || isGameOver || !hasLockedCards;
-
-  const effectiveTransition = shouldDisableTransition
-    ? 'none'
-    : (transition ? transition.replace(/(\d+)ms/, '350ms') : 'transform 350ms ease');
+  // Always disable dnd-kit transitions - they calculate incorrect positions when locked items are present
+  // dnd-kit assumes all items can shift, but locked items break this assumption
+  // Let React's instant re-render handle position updates correctly
+  const effectiveTransition = 'none';
 
   const style: React.CSSProperties = {
     transform: transform
