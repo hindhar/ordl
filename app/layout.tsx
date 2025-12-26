@@ -15,7 +15,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Ordl - Order History Daily",
+  title: "Ordl",
   description: "A daily puzzle game where you order 6 historical events chronologically. New puzzle every day!",
   keywords: ["ordl", "history", "puzzle", "daily game", "wordle", "trivia", "timeline"],
   authors: [{ name: "Ordl" }],
@@ -25,13 +25,13 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "Ordl - Order History Daily",
+    title: "Ordl",
     description: "Can you order 6 historical events? New puzzle daily!",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Ordl - Order History Daily",
+    title: "Ordl",
     description: "Can you order 6 historical events? New puzzle daily!",
   },
 };

@@ -38,9 +38,6 @@ export const Header = ({
             <span className="masthead-letter">D</span>
             <span className="masthead-letter">L</span>
           </h1>
-          <p className="text-xs tracking-[0.3em] uppercase text-text-secondary mt-1 font-medium">
-            Order History Daily
-          </p>
         </div>
 
         <div className="flex items-center justify-center gap-3 mt-3">
