@@ -57,7 +57,7 @@ export const ResultModal = ({
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-text-primary/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-secondary rounded-2xl p-6 max-w-sm w-full animate-slide-up shadow-xl border border-border relative">
+      <div className="bg-bg-secondary rounded-2xl p-6 max-w-sm w-full max-h-[85vh] overflow-y-auto animate-slide-up shadow-xl border border-border relative">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -70,12 +70,12 @@ export const ResultModal = ({
         </button>
 
         {/* Result header with score */}
-        <div className="text-center mb-6">
-          <h2 className={`text-3xl font-display font-bold tracking-tight ${won ? 'text-correct' : 'text-incorrect'}`}>
+        <div className="text-center mb-4">
+          <h2 className={`text-2xl font-display font-bold tracking-tight ${won ? 'text-correct' : 'text-incorrect'}`}>
             {won ? 'Brilliant!' : 'So Close!'}
           </h2>
-          <p className="text-4xl font-display font-bold text-text-primary mt-3">{score}</p>
-          <p className="text-text-secondary mt-2 text-sm">
+          <p className="text-3xl font-display font-bold text-text-primary mt-2">{score}</p>
+          <p className="text-text-secondary mt-1 text-sm">
             {won
               ? `Solved in ${attempts.length} attempt${attempts.length === 1 ? '' : 's'}`
               : 'Better luck tomorrow'}
@@ -86,17 +86,17 @@ export const ResultModal = ({
         <StatsDisplay stats={stats} lastGuessCount={won ? attempts.length : undefined} />
 
         {/* Wordle-style grid: each row = one guess, each column = one position */}
-        <div className="share-grid text-center py-4 text-2xl leading-relaxed font-mono">
+        <div className="share-grid text-center py-3 text-xl leading-normal font-mono">
           {gridRows.map((row, i) => (
-            <div key={i} className="tracking-wider">{row}</div>
+            <div key={i} className="tracking-wide">{row}</div>
           ))}
         </div>
 
         {/* Share button */}
-        <div className="flex justify-center py-4">
+        <div className="flex justify-center py-3">
           <button
             onClick={handleShare}
-            className="btn-primary min-w-[200px] text-lg flex items-center justify-center gap-2"
+            className="btn-primary min-w-[180px] flex items-center justify-center gap-2"
           >
             {copied ? (
               <>
