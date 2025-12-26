@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { GameStats } from '@/lib/storage';
-import { generateShareText, generateGridRows, copyToClipboard } from '@/lib/share';
+import { generateGridRows, shareResults } from '@/lib/share';
 import { StatsDisplay } from './StatsDisplay';
 import { Countdown } from './Countdown';
 
@@ -13,6 +13,7 @@ interface ResultModalProps {
   attempts: boolean[][];
   stats: GameStats;
   isSimulation?: boolean;
+  maxArchivePuzzle?: number;
   onClose: () => void;
   onPractice: () => void;
 }
@@ -24,6 +25,7 @@ export const ResultModal = ({
   attempts,
   stats,
   isSimulation = false,
+  maxArchivePuzzle = 0,
   onClose,
   onPractice,
 }: ResultModalProps) => {
@@ -32,7 +34,7 @@ export const ResultModal = ({
   if (!isOpen) return null;
 
   const handleShare = async () => {
-    const shareText = generateShareText({
+    const result = await shareResults({
       puzzleNumber,
       attempts,
       won,
@@ -40,8 +42,8 @@ export const ResultModal = ({
       isSimulation,
     });
 
-    const success = await copyToClipboard(shareText);
-    if (success) {
+    // Only show "Copied!" for clipboard shares (native share has its own UI)
+    if (result.success && result.method === 'clipboard') {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -59,7 +61,7 @@ export const ResultModal = ({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition-colors"
+          className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-neutral rounded-full transition-colors"
           aria-label="Close"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -119,15 +121,17 @@ export const ResultModal = ({
           <Countdown />
         </div>
 
-        {/* Practice button */}
-        <div className="text-center mt-4">
-          <button
-            onClick={onPractice}
-            className="text-sm text-accent hover:underline"
-          >
-            Practice with other puzzles
-          </button>
-        </div>
+        {/* Archive button - only show if there are archive puzzles available */}
+        {maxArchivePuzzle > 0 && (
+          <div className="text-center mt-4">
+            <button
+              onClick={onPractice}
+              className="text-sm text-accent hover:underline"
+            >
+              Browse the archive
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

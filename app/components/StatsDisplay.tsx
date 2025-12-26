@@ -13,10 +13,16 @@ export const StatsDisplay = ({ stats, lastGuessCount }: StatsDisplayProps) => {
   return (
     <div className="space-y-4">
       {/* Summary stats */}
-      <div className="flex justify-center gap-8 py-4 bg-neutral rounded-xl">
+      <div className="flex justify-center gap-6 py-4 bg-neutral rounded-xl">
         <div className="text-center">
           <p className="text-2xl font-display font-bold text-text-primary">{stats.gamesPlayed}</p>
           <p className="text-[10px] text-text-secondary uppercase tracking-wider font-medium">Played</p>
+        </div>
+        <div className="text-center">
+          <p className="text-2xl font-display font-bold text-correct">
+            {stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0}%
+          </p>
+          <p className="text-[10px] text-text-secondary uppercase tracking-wider font-medium">Win Rate</p>
         </div>
         <div className="text-center">
           <p className="text-2xl font-display font-bold text-accent">{stats.currentStreak}</p>

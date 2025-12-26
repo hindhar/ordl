@@ -3,20 +3,20 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { getPuzzleNumber } from '@/lib/puzzle';
+import { getMaxArchivePuzzle } from '@/lib/puzzle';
 import { TOTAL_PUZZLES } from '@/lib/events';
 
 export default function ArchivePage() {
   const router = useRouter();
-  const todaysPuzzle = getPuzzleNumber();
   const [showAll, setShowAll] = useState(false);
 
   // In dev mode, allow showing all puzzles for testing
   const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
 
-  // Calculate available puzzles (past puzzles, or all in dev mode)
-  const pastPuzzles = Math.min(Math.max(0, todaysPuzzle - 1), TOTAL_PUZZLES);
-  const availablePuzzles = (isDev && showAll) ? TOTAL_PUZZLES : pastPuzzles;
+  // Calculate available puzzles using the centralized function
+  // This ensures consistency with the game logic
+  const maxArchive = getMaxArchivePuzzle();
+  const availablePuzzles = (isDev && showAll) ? TOTAL_PUZZLES : maxArchive;
 
   const handlePuzzleSelect = (puzzleNum: number) => {
     // Navigate to main page with puzzle parameter
@@ -60,7 +60,7 @@ export default function ArchivePage() {
                     : 'bg-neutral text-text-secondary hover:bg-border'
                 }`}
               >
-                {showAll ? `All ${TOTAL_PUZZLES} puzzles` : `Past puzzles only (${pastPuzzles})`}
+                {showAll ? `All ${TOTAL_PUZZLES} puzzles` : `Past puzzles only (${maxArchive})`}
               </button>
             </div>
           </div>

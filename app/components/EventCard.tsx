@@ -107,7 +107,7 @@ export const EventCard = ({
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         ) : (
-          <div className="flex flex-col gap-[3px] opacity-25 group-hover:opacity-40 transition-opacity">
+          <div className="flex flex-col gap-[3px] opacity-60 group-hover:opacity-80 transition-opacity">
             <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
             <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
             <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>

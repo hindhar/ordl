@@ -67,3 +67,29 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Share using native share sheet (mobile) or fallback to clipboard
+export const shareResults = async (data: ShareData): Promise<{ success: boolean; method: 'native' | 'clipboard' }> => {
+  const shareText = generateShareText(data);
+
+  // Try native share API first (primarily for mobile)
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Ordl - Order History Daily',
+        text: shareText,
+        url: 'https://ordl.io'
+      });
+      return { success: true, method: 'native' };
+    } catch (err) {
+      // User cancelled or share failed - fall through to clipboard
+      if ((err as Error).name !== 'AbortError') {
+        console.error('Native share failed:', err);
+      }
+    }
+  }
+
+  // Fallback to clipboard
+  const clipboardSuccess = await copyToClipboard(shareText);
+  return { success: clipboardSuccess, method: 'clipboard' };
+};

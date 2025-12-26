@@ -7,6 +7,8 @@ import {
   getShuffledPuzzleEvents,
   getCorrectOrder,
   isCorrectPosition,
+  getMaxArchivePuzzle,
+  isValidArchivePuzzle,
 } from '@/lib/puzzle';
 import {
   TodayGameState,
@@ -34,6 +36,7 @@ export interface GameState {
   hasChangedSinceLastSubmit: boolean;
   isSimulation: boolean;
   totalPuzzles: number;
+  maxArchivePuzzle: number;
 }
 
 export interface GameActions {
@@ -68,25 +71,30 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
       const todayNum = getPuzzleNumber();
       setRealPuzzleNumber(todayNum);
 
-      // If initialPuzzle is provided and different from today, load it in simulation mode
-      if (initialPuzzle && initialPuzzle !== todayNum && initialPuzzle >= 1 && initialPuzzle <= TOTAL_PUZZLES) {
-        const validPuzzle = initialPuzzle;
-        setPuzzleNumber(validPuzzle);
-        setIsSimulation(true);
+      // If initialPuzzle is provided and different from today, validate and load it in archive mode
+      // Security: Only allow access to past puzzles (1 through todayNum - 1)
+      if (initialPuzzle && initialPuzzle !== todayNum) {
+        // Check if the requested puzzle is a valid archive puzzle
+        if (isValidArchivePuzzle(initialPuzzle)) {
+          const validPuzzle = initialPuzzle;
+          setPuzzleNumber(validPuzzle);
+          setIsSimulation(true);
 
-        const puzzleEvents = getShuffledPuzzleEvents(validPuzzle);
-        setEvents(puzzleEvents);
-        setCorrectOrder(getCorrectOrder(puzzleEvents));
-        setCurrentOrder([...puzzleEvents]);
-        setLockedPositions([]);
-        setAttempts([]);
-        setMistakes(0);
-        setStatus('playing');
-        setLastSubmitResults(null);
-        setHasChangedSinceLastSubmit(true);
-        setStats(loadStats());
-        setIsLoading(false);
-        return;
+          const puzzleEvents = getShuffledPuzzleEvents(validPuzzle);
+          setEvents(puzzleEvents);
+          setCorrectOrder(getCorrectOrder(puzzleEvents));
+          setCurrentOrder([...puzzleEvents]);
+          setLockedPositions([]);
+          setAttempts([]);
+          setMistakes(0);
+          setStatus('playing');
+          setLastSubmitResults(null);
+          setHasChangedSinceLastSubmit(true);
+          setStats(loadStats());
+          setIsLoading(false);
+          return;
+        }
+        // Invalid puzzle number (future puzzle or out of range) - fall through to load today's puzzle
       }
 
       // Otherwise load today's puzzle
@@ -232,13 +240,21 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setHasChangedSinceLastSubmit(true);
   }, [puzzleNumber]);
 
-  // Load a specific puzzle (simulation mode)
+  // Load a specific puzzle (archive mode)
+  // Security: Only allow access to past puzzles (1 through maxArchivePuzzle)
   const loadPuzzle = useCallback((puzzleNum: number) => {
-    const validPuzzle = ((puzzleNum - 1) % TOTAL_PUZZLES) + 1;
-    setPuzzleNumber(validPuzzle);
+    const maxArchive = getMaxArchivePuzzle();
+
+    // Validate the puzzle number is within archive range
+    if (puzzleNum < 1 || puzzleNum > maxArchive) {
+      // Invalid puzzle number - don't load
+      return;
+    }
+
+    setPuzzleNumber(puzzleNum);
     setIsSimulation(true);
 
-    const puzzleEvents = getShuffledPuzzleEvents(validPuzzle);
+    const puzzleEvents = getShuffledPuzzleEvents(puzzleNum);
     setEvents(puzzleEvents);
     setCorrectOrder(getCorrectOrder(puzzleEvents));
     setCurrentOrder([...puzzleEvents]);
@@ -306,6 +322,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     hasChangedSinceLastSubmit,
     isSimulation,
     totalPuzzles: TOTAL_PUZZLES,
+    maxArchivePuzzle: getMaxArchivePuzzle(),
     reorderEvents,
     submitOrder,
     resetGame,

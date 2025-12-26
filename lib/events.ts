@@ -55,7 +55,7 @@ export const EVENTS: HistoricalEvent[] = [
   { id: "thriller", event: "Thriller album released", year: 1982, fullDate: "November 30, 1982", emoji: "🎤" },
   { id: "macintosh", event: "First Macintosh released", year: 1984, fullDate: "January 24, 1984", emoji: "🖥️" },
   { id: "liveaid", event: "Live Aid concert", year: 1985, fullDate: "July 13, 1985", emoji: "🎸" },
-  { id: "chernobyl2", event: "Chernobyl disaster", year: 1986, fullDate: "April 26, 1986", emoji: "☢️" },
+  { id: "shuttle", event: "First Space Shuttle launch", year: 1981, fullDate: "April 12, 1981", emoji: "🚀" },
 
   // Puzzle 7: 1972-1977 Mix
   { id: "watergate", event: "Watergate break-in", year: 1972, fullDate: "June 17, 1972", emoji: "📰" },

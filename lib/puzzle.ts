@@ -23,6 +23,23 @@ export const getPuzzleNumber = (): number => {
   return Math.max(1, dayNumber + 1); // Puzzle numbers start at 1
 };
 
+// Alias for clarity - returns today's puzzle number
+export const getTodaysPuzzleNumber = getPuzzleNumber;
+
+// Get the maximum puzzle number accessible in the archive
+// Users can only access puzzles 1 through (today - 1)
+// Today's puzzle is the "live" puzzle and not available in archive
+export const getMaxArchivePuzzle = (): number => {
+  const todaysPuzzle = getPuzzleNumber();
+  return Math.max(0, todaysPuzzle - 1);
+};
+
+// Check if a puzzle number is valid for archive access
+export const isValidArchivePuzzle = (puzzleNum: number): boolean => {
+  const maxArchive = getMaxArchivePuzzle();
+  return puzzleNum >= 1 && puzzleNum <= maxArchive;
+};
+
 // Get the puzzle index (which set of 5 events to use)
 export const getPuzzleIndex = (puzzleNumber: number): number => {
   return (puzzleNumber - 1) % TOTAL_PUZZLES;

@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGame } from '@/hooks/useGame';
 import { Header } from './Header';
 import { EventList } from './EventList';
 import { MistakeIndicator } from './MistakeIndicator';
 import { SubmitButton } from './SubmitButton';
 import { ResultModal } from './ResultModal';
+import { HowToPlayModal } from './HowToPlayModal';
+import { StatsModal } from './StatsModal';
+import { shareResults } from '@/lib/share';
 
 const MAX_GUESSES = 4;
 
@@ -14,8 +17,36 @@ interface GameProps {
   initialPuzzle?: number;
 }
 
+const ONBOARDING_KEY = 'ordl-onboarding-seen';
+
 export const Game = ({ initialPuzzle }: GameProps) => {
   const [modalDismissed, setModalDismissed] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+
+  // Show onboarding modal for first-time users
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
+    if (!hasSeenOnboarding) {
+      setShowHowToPlay(true);
+    }
+  }, []);
+
+  const handleCloseHowToPlay = () => {
+    setShowHowToPlay(false);
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+  };
+
+  const handleShare = async () => {
+    if (status === 'playing') return; // Only share when game is complete
+    await shareResults({
+      puzzleNumber,
+      attempts,
+      won: status === 'won',
+      streak: stats.currentStreak,
+      isSimulation,
+    });
+  };
 
   const {
     puzzleNumber,
@@ -30,6 +61,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     hasChangedSinceLastSubmit,
     isSimulation,
     totalPuzzles,
+    maxArchivePuzzle,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -50,13 +82,17 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     (!hasChangedSinceLastSubmit && attempts.length > 0);
 
   const handlePrevPuzzle = () => {
-    const prev = puzzleNumber > 1 ? puzzleNumber - 1 : totalPuzzles;
-    loadPuzzle(prev);
+    // Only navigate within archive range (1 to maxArchivePuzzle)
+    if (puzzleNumber > 1) {
+      loadPuzzle(puzzleNumber - 1);
+    }
   };
 
   const handleNextPuzzle = () => {
-    const next = puzzleNumber < totalPuzzles ? puzzleNumber + 1 : 1;
-    loadPuzzle(next);
+    // Only navigate within archive range (1 to maxArchivePuzzle)
+    if (puzzleNumber < maxArchivePuzzle) {
+      loadPuzzle(puzzleNumber + 1);
+    }
   };
 
   return (
@@ -65,10 +101,13 @@ export const Game = ({ initialPuzzle }: GameProps) => {
         puzzleNumber={puzzleNumber}
         isSimulation={isSimulation}
         totalPuzzles={totalPuzzles}
+        maxArchivePuzzle={maxArchivePuzzle}
         onPrevPuzzle={handlePrevPuzzle}
         onNextPuzzle={handleNextPuzzle}
         onExitSimulation={exitSimulation}
-        onEnterPractice={() => loadPuzzle(1)}
+        onShowHelp={() => setShowHowToPlay(true)}
+        onShowStats={() => setShowStats(true)}
+        onShare={handleShare}
       />
 
       <main className="flex-grow flex flex-col py-6">
@@ -82,6 +121,11 @@ export const Game = ({ initialPuzzle }: GameProps) => {
 
         {status === 'playing' && (
           <>
+            <SubmitButton
+              onClick={submitOrder}
+              disabled={isSubmitDisabled}
+              status={status}
+            />
             {/* Streak display - prominent for motivation */}
             {stats.currentStreak > 0 && (
               <div className="text-center mt-4 mb-2">
@@ -92,27 +136,22 @@ export const Game = ({ initialPuzzle }: GameProps) => {
               </div>
             )}
             <MistakeIndicator guessesUsed={attempts.length} maxGuesses={MAX_GUESSES} />
-            <SubmitButton
-              onClick={submitOrder}
-              disabled={isSubmitDisabled}
-              status={status}
-            />
           </>
         )}
 
-        {/* Practice mode button - shown when game is complete */}
-        {status !== 'playing' && !isSimulation && (
+        {/* Archive mode button - shown when game is complete and there are archive puzzles */}
+        {status !== 'playing' && !isSimulation && maxArchivePuzzle > 0 && (
           <div className="text-center mt-4">
             <button
               onClick={() => loadPuzzle(1)}
               className="text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
-              Practice with other puzzles
+              Browse the archive
             </button>
           </div>
         )}
 
-        {/* Reset button for simulation mode */}
+        {/* Reset button for archive mode */}
         {isSimulation && status !== 'playing' && (
           <div className="flex justify-center gap-4 mt-4">
             <button
@@ -121,12 +160,14 @@ export const Game = ({ initialPuzzle }: GameProps) => {
             >
               Try again
             </button>
-            <button
-              onClick={handleNextPuzzle}
-              className="text-sm text-accent hover:underline"
-            >
-              Next puzzle
-            </button>
+            {puzzleNumber < maxArchivePuzzle && (
+              <button
+                onClick={handleNextPuzzle}
+                className="text-sm text-accent hover:underline"
+              >
+                Next puzzle
+              </button>
+            )}
           </div>
         )}
       </main>
@@ -138,11 +179,23 @@ export const Game = ({ initialPuzzle }: GameProps) => {
         attempts={attempts}
         stats={stats}
         isSimulation={isSimulation}
+        maxArchivePuzzle={maxArchivePuzzle}
         onClose={() => setModalDismissed(true)}
         onPractice={() => {
           setModalDismissed(true);
           loadPuzzle(1);
         }}
+      />
+
+      <HowToPlayModal
+        isOpen={showHowToPlay}
+        onClose={handleCloseHowToPlay}
+      />
+
+      <StatsModal
+        isOpen={showStats}
+        onClose={() => setShowStats(false)}
+        stats={stats}
       />
     </div>
   );
