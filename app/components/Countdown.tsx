@@ -21,8 +21,8 @@ export const Countdown = () => {
 
   return (
     <div className="text-center text-text-secondary">
-      <p className="text-sm mb-1">Next puzzle in</p>
-      <p className="text-2xl font-mono font-semibold text-text-primary">
+      <p className="text-xs">Next puzzle in</p>
+      <p className="text-lg font-mono font-semibold text-text-primary">
         {pad(time.hours)}:{pad(time.minutes)}:{pad(time.seconds)}
       </p>
     </div>

@@ -57,7 +57,7 @@ export const ResultModal = ({
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-text-primary/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-secondary rounded-2xl p-6 max-w-sm w-full max-h-[85vh] overflow-y-auto animate-slide-up shadow-xl border border-border relative">
+      <div className="bg-bg-secondary rounded-2xl p-5 max-w-sm w-full max-h-[85vh] overflow-y-auto animate-slide-up shadow-xl border border-border relative">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -117,16 +117,16 @@ export const ResultModal = ({
         </div>
 
         {/* Countdown */}
-        <div className="pt-4 border-t border-border">
+        <div className="pt-3 border-t border-border">
           <Countdown />
         </div>
 
         {/* Archive button - only show if there are archive puzzles available */}
         {maxArchivePuzzle > 0 && (
-          <div className="text-center mt-4">
+          <div className="text-center mt-2">
             <button
               onClick={onPractice}
-              className="text-sm text-accent hover:underline"
+              className="text-xs text-accent hover:underline"
             >
               Browse the archive
             </button>
