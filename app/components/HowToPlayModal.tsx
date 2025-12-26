@@ -56,41 +56,40 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
             </div>
           </div>
 
-          {/* Step 3 - Color meaning */}
+          {/* Step 3 - Color meaning with example beside it */}
           <div className="flex gap-3 items-start">
             <div className="w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center flex-shrink-0 font-display font-bold text-sm">
               3
             </div>
-            <div>
-              <p className="font-medium text-text-primary">Check feedback</p>
-              <div className="text-sm text-text-secondary space-y-1 mt-1">
-                <p className="flex items-center gap-2">
-                  <span className="inline-block w-5 h-5 rounded bg-correct flex-shrink-0"></span>
-                  <span>= Correct position (locked)</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="inline-block w-5 h-5 rounded bg-incorrect flex-shrink-0"></span>
-                  <span>= Wrong position (try again)</span>
-                </p>
+            <div className="flex gap-4 flex-1">
+              {/* Feedback explanation */}
+              <div className="flex-1">
+                <p className="font-medium text-text-primary">Check feedback</p>
+                <div className="text-sm text-text-secondary space-y-1 mt-1">
+                  <p className="flex items-center gap-2">
+                    <span className="inline-block w-5 h-5 rounded bg-correct flex-shrink-0"></span>
+                    <span>= Correct</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="inline-block w-5 h-5 rounded bg-incorrect flex-shrink-0"></span>
+                    <span>= Try again</span>
+                  </p>
+                </div>
+              </div>
+              {/* Example - vertical grid */}
+              <div className="p-3 bg-neutral rounded-xl flex-shrink-0">
+                <p className="text-[10px] text-text-secondary uppercase tracking-wide mb-2 text-center">Example</p>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-base">🟩</span>
+                  <span className="text-base">🟥</span>
+                  <span className="text-base">🟩</span>
+                  <span className="text-base">🟩</span>
+                  <span className="text-base">🟥</span>
+                  <span className="text-base">🟩</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Example */}
-        <div className="mt-6 p-4 bg-neutral rounded-xl">
-          <p className="text-xs text-text-secondary uppercase tracking-wide mb-3 text-center">Example</p>
-          <div className="flex justify-center gap-1 text-lg">
-            <span>🟩</span>
-            <span>🟥</span>
-            <span>🟩</span>
-            <span>🟩</span>
-            <span>🟥</span>
-            <span>🟩</span>
-          </div>
-          <p className="text-xs text-text-secondary text-center mt-2">
-            4 events correct, 2 need rearranging
-          </p>
         </div>
 
         {/* New puzzle info */}
