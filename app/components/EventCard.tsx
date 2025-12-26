@@ -61,17 +61,14 @@ export const EventCard = ({
   });
 
   // Transition logic:
-  // - During drag/reveal/game over: no transition (instant)
-  // - With locked cards: slower 400ms transition for smooth rearrangement
-  // - Normal drag (no locked cards): use dnd-kit's default transition
-  const shouldDisableTransition = isDragging || isRevealing || isGameOver;
+  // - No transition for normal drags (instant snap feels cleaner)
+  // - Only use transition when rearranging around locked cards (smooth flow)
+  // - Never transition during reveal or game over
+  const shouldDisableTransition = isDragging || isRevealing || isGameOver || !hasLockedCards;
 
-  // Only slow down transitions when rearranging around locked cards
   const effectiveTransition = shouldDisableTransition
     ? 'none'
-    : hasLockedCards
-      ? (transition ? transition.replace(/(\d+)ms/, '400ms') : 'transform 400ms ease')
-      : (transition || 'transform 250ms ease');
+    : (transition ? transition.replace(/(\d+)ms/, '350ms') : 'transform 350ms ease');
 
   const style: React.CSSProperties = {
     transform: transform
