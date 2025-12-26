@@ -57,7 +57,7 @@ export const ResultModal = ({
 
   return (
     <div className="modal-backdrop fixed inset-0 bg-text-primary/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-secondary rounded-2xl p-5 max-w-sm w-full max-h-[85vh] overflow-y-auto animate-slide-up shadow-xl border border-border relative">
+      <div className="bg-bg-secondary rounded-2xl p-5 max-w-sm w-full animate-slide-up shadow-xl border border-border relative">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -82,8 +82,10 @@ export const ResultModal = ({
           </p>
         </div>
 
-        {/* Stats */}
-        <StatsDisplay stats={stats} lastGuessCount={won ? attempts.length : undefined} />
+        {/* Stats - only show for today's puzzle, not archive */}
+        {!isSimulation && (
+          <StatsDisplay stats={stats} lastGuessCount={won ? attempts.length : undefined} />
+        )}
 
         {/* Wordle-style grid: each row = one guess, each column = one position */}
         <div className="share-grid text-center py-3 text-xl leading-normal font-mono">
@@ -116,10 +118,12 @@ export const ResultModal = ({
           </button>
         </div>
 
-        {/* Countdown */}
-        <div className="pt-3 border-t border-border">
-          <Countdown />
-        </div>
+        {/* Countdown - only show for today's puzzle */}
+        {!isSimulation && (
+          <div className="pt-3 border-t border-border">
+            <Countdown />
+          </div>
+        )}
 
         {/* Archive button - only show if there are archive puzzles available */}
         {maxArchivePuzzle > 0 && (
