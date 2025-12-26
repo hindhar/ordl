@@ -12,6 +12,7 @@ interface EventCardProps {
   isIncorrect: boolean;
   showDate?: boolean;
   isGameOver?: boolean;
+  hasLockedCards?: boolean; // Whether any cards are locked (for transition speed)
   // Reveal animation props
   isRevealing?: boolean;
   isRevealed?: boolean;
@@ -27,29 +28,14 @@ export const EventCard = ({
   isIncorrect,
   showDate = false,
   isGameOver = false,
+  hasLockedCards = false,
   isRevealing = false,
   isRevealed = false,
   pendingResult = null,
   isDateRevealed = false,
 }: EventCardProps) => {
-  const [justLocked, setJustLocked] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
-  const wasLockedRef = useRef(isLocked);
   const wasRevealedRef = useRef(isRevealed);
-
-  // Detect when card becomes locked and trigger animation
-  // Only animate if the card is correct (not just locked because game is over)
-  useEffect(() => {
-    const isNewlyLocked = isLocked && !wasLockedRef.current;
-    const isCorrectCard = isCorrect === true || pendingResult === true;
-
-    if (isNewlyLocked && isCorrectCard && !isGameOver) {
-      setJustLocked(true);
-      const timer = setTimeout(() => setJustLocked(false), 500);
-      return () => clearTimeout(timer);
-    }
-    wasLockedRef.current = isLocked;
-  }, [isLocked, isCorrect, pendingResult, isGameOver]);
 
   // Trigger flip animation when this card is revealed
   // Skip animation if card was already locked from a previous guess
@@ -74,22 +60,24 @@ export const EventCard = ({
     disabled: isLocked,
   });
 
-  // Slower transition for rearrangement around locked cards
-  // Keep default ease feel, just longer duration (default is ~250ms)
-  // IMPORTANT: Disable transitions during reveal and after game over to prevent
-  // cards from sliding around when order changes (e.g., when solution is shown)
-  const slowerTransition = transition
-    ? transition.replace(/(\d+)ms/, '400ms')
-    : 'transform 400ms ease';
-
-  // Determine if we should disable transitions entirely
+  // Transition logic:
+  // - During drag/reveal/game over: no transition (instant)
+  // - With locked cards: slower 400ms transition for smooth rearrangement
+  // - Normal drag (no locked cards): use dnd-kit's default transition
   const shouldDisableTransition = isDragging || isRevealing || isGameOver;
+
+  // Only slow down transitions when rearranging around locked cards
+  const effectiveTransition = shouldDisableTransition
+    ? 'none'
+    : hasLockedCards
+      ? (transition ? transition.replace(/(\d+)ms/, '400ms') : 'transform 400ms ease')
+      : (transition || 'transform 250ms ease');
 
   const style: React.CSSProperties = {
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
       : undefined,
-    transition: shouldDisableTransition ? 'none' : slowerTransition,
+    transition: effectiveTransition,
     zIndex: isDragging ? 100 : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
   };
@@ -126,7 +114,6 @@ export const EventCard = ({
         event-card
         ${cardClasses}
         ${isLocked ? 'locked' : ''}
-        ${justLocked ? 'just-locked' : ''}
         ${isDragging ? 'dragging' : ''}
         ${isFlipping ? 'card-flip' : ''}
         flex items-center gap-4 p-4 rounded-xl border min-h-[76px]

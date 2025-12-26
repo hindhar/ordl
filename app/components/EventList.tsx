@@ -139,6 +139,7 @@ export const EventList = ({
   };
 
   const isGameOver = status !== 'playing';
+  const hasLockedCards = lockedPositions.length > 0;
 
   return (
     <div className="w-full max-w-lg mx-auto px-4">
@@ -188,6 +189,7 @@ export const EventList = ({
                   isIncorrect={isIncorrect}
                   showDate={isGameOver}
                   isGameOver={isGameOver}
+                  hasLockedCards={hasLockedCards}
                   // Reveal animation props
                   isRevealing={isRevealing}
                   isRevealed={index <= revealedResultIndex}
