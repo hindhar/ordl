@@ -5,6 +5,8 @@ import {
   TodayGameState,
   loadTodayGame,
   saveTodayGame,
+  loadArchiveGame,
+  saveArchiveGame,
   updateStatsAfterGame,
   loadStats,
   GameStats,
@@ -150,13 +152,47 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
           setPuzzleNumber(initialPuzzle);
           setIsSimulation(true);
           setEvents(archiveData.events);
-          setCurrentOrder([...archiveData.events]);
-          setLockedPositions([]);
-          setAttempts([]);
-          setMistakes(0);
-          setStatus('playing');
-          setLastSubmitResults(null);
-          setHasChangedSinceLastSubmit(true);
+
+          // Check for saved archive state
+          const savedArchiveGame = loadArchiveGame(initialPuzzle);
+
+          if (savedArchiveGame) {
+            // Restore saved archive state
+            const orderMap = new Map(archiveData.events.map((e) => [e.id, e]));
+            const restoredOrder = savedArchiveGame.currentOrder
+              .map((id) => orderMap.get(id))
+              .filter((e): e is ClientEvent => e !== undefined);
+
+            setCurrentOrder(restoredOrder);
+            setLockedPositions(savedArchiveGame.lockedPositions);
+            setAttempts(savedArchiveGame.attempts);
+            setMistakes(savedArchiveGame.mistakes);
+            setStatus(savedArchiveGame.completed ? (savedArchiveGame.won ? 'won' : 'lost') : 'playing');
+            setHasChangedSinceLastSubmit(false);
+
+            if (savedArchiveGame.attempts.length > 0) {
+              setLastSubmitResults(savedArchiveGame.attempts[savedArchiveGame.attempts.length - 1]);
+            }
+
+            // If game is complete, fetch solution to show dates
+            if (savedArchiveGame.completed) {
+              const solution = await fetchSolution(initialPuzzle);
+              if (solution) {
+                setCurrentOrder(solution);
+                setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
+              }
+            }
+          } else {
+            // Fresh archive game
+            setCurrentOrder([...archiveData.events]);
+            setLockedPositions([]);
+            setAttempts([]);
+            setMistakes(0);
+            setStatus('playing');
+            setLastSubmitResults(null);
+            setHasChangedSinceLastSubmit(true);
+          }
+
           setStats(loadStats());
           setIsLoading(false);
           return;
@@ -215,9 +251,9 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     initGame();
   }, [initialPuzzle]);
 
-  // Save game state whenever it changes (only for real puzzles, not simulations)
+  // Save game state whenever it changes (both today's puzzle and archive puzzles)
   useEffect(() => {
-    if (isLoading || currentOrder.length === 0 || isSimulation) return;
+    if (isLoading || currentOrder.length === 0) return;
 
     const gameState: TodayGameState = {
       puzzleNumber,
@@ -229,7 +265,12 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
       won: status === 'won',
     };
 
-    saveTodayGame(gameState);
+    // Save to appropriate storage based on whether it's an archive puzzle
+    if (isSimulation) {
+      saveArchiveGame(gameState);
+    } else {
+      saveTodayGame(gameState);
+    }
   }, [puzzleNumber, attempts, currentOrder, lockedPositions, mistakes, status, isLoading, isSimulation]);
 
   // Reorder events (for drag and drop)
@@ -362,13 +403,46 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setPuzzleNumber(puzzleNum);
     setIsSimulation(true);
     setEvents(puzzleData.events);
-    setCurrentOrder([...puzzleData.events]);
-    setLockedPositions([]);
-    setAttempts([]);
-    setMistakes(0);
-    setStatus('playing');
-    setLastSubmitResults(null);
-    setHasChangedSinceLastSubmit(true);
+
+    // Check for saved archive state
+    const savedArchiveGame = loadArchiveGame(puzzleNum);
+
+    if (savedArchiveGame) {
+      // Restore saved archive state
+      const orderMap = new Map(puzzleData.events.map((e) => [e.id, e]));
+      const restoredOrder = savedArchiveGame.currentOrder
+        .map((id) => orderMap.get(id))
+        .filter((e): e is ClientEvent => e !== undefined);
+
+      setCurrentOrder(restoredOrder);
+      setLockedPositions(savedArchiveGame.lockedPositions);
+      setAttempts(savedArchiveGame.attempts);
+      setMistakes(savedArchiveGame.mistakes);
+      setStatus(savedArchiveGame.completed ? (savedArchiveGame.won ? 'won' : 'lost') : 'playing');
+      setHasChangedSinceLastSubmit(false);
+
+      if (savedArchiveGame.attempts.length > 0) {
+        setLastSubmitResults(savedArchiveGame.attempts[savedArchiveGame.attempts.length - 1]);
+      }
+
+      // If game is complete, fetch solution to show dates
+      if (savedArchiveGame.completed) {
+        const solution = await fetchSolution(puzzleNum);
+        if (solution) {
+          setCurrentOrder(solution);
+          setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
+        }
+      }
+    } else {
+      // Fresh archive game
+      setCurrentOrder([...puzzleData.events]);
+      setLockedPositions([]);
+      setAttempts([]);
+      setMistakes(0);
+      setStatus('playing');
+      setLastSubmitResults(null);
+      setHasChangedSinceLastSubmit(true);
+    }
   }, [maxArchivePuzzle]);
 
   // Exit simulation and return to today's puzzle

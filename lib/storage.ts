@@ -144,3 +144,32 @@ export const clearTodayGame = (): void => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(TODAY_GAME_KEY);
 };
+
+// Archive puzzle storage - persists progress for each archive puzzle
+const ARCHIVE_GAME_KEY_PREFIX = 'ordl-archive-';
+
+// Load archive game state
+export const loadArchiveGame = (puzzleNumber: number): TodayGameState | null => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const stored = localStorage.getItem(`${ARCHIVE_GAME_KEY_PREFIX}${puzzleNumber}`);
+    if (!stored) return null;
+
+    const game = JSON.parse(stored) as TodayGameState;
+    return game;
+  } catch {
+    return null;
+  }
+};
+
+// Save archive game state
+export const saveArchiveGame = (game: TodayGameState): void => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(`${ARCHIVE_GAME_KEY_PREFIX}${game.puzzleNumber}`, JSON.stringify(game));
+  } catch {
+    console.error('Failed to save archive game state');
+  }
+};
