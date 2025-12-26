@@ -72,6 +72,9 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     // Hybrid animation state
     solutionColorMap,
     isColorTransitioning,
+    // FLIP rearrangement animation
+    isAnimatingRearrangement,
+    preRearrangeOrder,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -136,6 +139,8 @@ export const Game = ({ initialPuzzle }: GameProps) => {
           isSolutionRevealing={isSolutionRevealing}
           solutionColorMap={solutionColorMap}
           isColorTransitioning={isColorTransitioning}
+          isAnimatingRearrangement={isAnimatingRearrangement}
+          preRearrangeOrder={preRearrangeOrder}
         />
 
         {status === 'playing' && (

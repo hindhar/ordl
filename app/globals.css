@@ -383,28 +383,9 @@ a:focus-visible {
   animation: dateReveal 0.48s ease-out;
 }
 
-/* Solution reveal animation - fade out/in when showing correct order after losing */
-@keyframes solutionFade {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  45% {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  55% {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.solution-reveal {
-  animation: solutionFade 0.8s ease-in-out;
+/* FLIP rearrangement animation - cards slide to new positions */
+.flip-rearranging {
+  will-change: transform;
 }
 
 /* Color transition animation - smooth fade from red/mixed to all green */

@@ -45,11 +45,14 @@ export interface GameState {
   isRevealingDates: boolean;
   revealedDateIndex: number;
   pendingResults: boolean[] | null;
-  // Solution reveal animation (for losing - cards fade out, rearrange, fade in)
+  // Solution reveal animation (for losing)
   isSolutionRevealing: boolean;
   // Hybrid animation: track original colors by event ID after rearrange
   solutionColorMap: Map<string, boolean> | null; // eventId -> wasCorrectInFinalGuess
   isColorTransitioning: boolean; // triggers fade from original colors to all green
+  // FLIP rearrangement animation
+  isAnimatingRearrangement: boolean;
+  preRearrangeOrder: ClientEvent[] | null; // Order before rearrangement (for FLIP calculation)
 }
 
 export interface GameActions {
@@ -134,6 +137,8 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   const [isSolutionRevealing, setIsSolutionRevealing] = useState(false);
   const [solutionColorMap, setSolutionColorMap] = useState<Map<string, boolean> | null>(null);
   const [isColorTransitioning, setIsColorTransitioning] = useState(false);
+  const [isAnimatingRearrangement, setIsAnimatingRearrangement] = useState(false);
+  const [preRearrangeOrder, setPreRearrangeOrder] = useState<ClientEvent[] | null>(null);
 
   // Calculate max archive puzzle (today - 1)
   const maxArchivePuzzle = Math.max(0, todaysPuzzle - 1);
@@ -354,9 +359,9 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
       const solution = await fetchSolution(puzzleNumber);
       if (solution) {
         if (!won) {
-          // HYBRID LOSING ANIMATION SEQUENCE:
+          // LOSING ANIMATION SEQUENCE:
           // 1. Pause to let user see their wrong results (already shown via flip)
-          await delay(800);
+          await delay(1000);
 
           // 2. Create color map: remember which events were correct/incorrect
           //    Map eventId -> wasCorrect (so we can show original colors after rearrange)
@@ -366,23 +371,24 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
           });
           setSolutionColorMap(colorMap);
 
-          // 3. Fade out cards (CSS handles the animation)
-          setIsSolutionRevealing(true);
-          await delay(350);
+          // 3. Store current order for FLIP animation calculation
+          setPreRearrangeOrder([...currentOrder]);
 
-          // 4. Rearrange to solution order (hidden during fade)
-          //    DON'T set all green yet - keep original colors via colorMap
+          // 4. Trigger rearrangement animation and set new order
+          //    EventList will use preRearrangeOrder to calculate transforms
+          setIsAnimatingRearrangement(true);
           setCurrentOrder(solution);
           setLockedPositions(Array.from({ length: EVENTS_PER_PUZZLE }, (_, i) => i));
           // Clear lastSubmitResults so EventCard uses colorMap instead
           setLastSubmitResults(null);
 
-          // 5. Fade in cards in correct order with ORIGINAL colors
-          await delay(450);
-          setIsSolutionRevealing(false);
+          // 5. Wait for FLIP animation to complete (800ms)
+          await delay(800);
+          setIsAnimatingRearrangement(false);
+          setPreRearrangeOrder(null);
 
           // 6. Pause so user can see where their mistakes were in correct order
-          await delay(1000);
+          await delay(800);
 
           // 7. Smooth color transition: fade all cards to green
           setIsColorTransitioning(true);
@@ -439,6 +445,8 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setIsSolutionRevealing(false);
     setSolutionColorMap(null);
     setIsColorTransitioning(false);
+    setIsAnimatingRearrangement(false);
+    setPreRearrangeOrder(null);
 
     const puzzleData = await fetchPuzzle(puzzleNumber);
     if (!puzzleData) return;
@@ -469,6 +477,8 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setIsSolutionRevealing(false);
     setSolutionColorMap(null);
     setIsColorTransitioning(false);
+    setIsAnimatingRearrangement(false);
+    setPreRearrangeOrder(null);
 
     const puzzleData = await fetchPuzzle(puzzleNum);
     if (!puzzleData) return;
@@ -529,6 +539,8 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setIsSolutionRevealing(false);
     setSolutionColorMap(null);
     setIsColorTransitioning(false);
+    setIsAnimatingRearrangement(false);
+    setPreRearrangeOrder(null);
 
     setIsSimulation(false);
 
@@ -604,6 +616,9 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     // Hybrid animation state
     solutionColorMap,
     isColorTransitioning,
+    // FLIP rearrangement animation
+    isAnimatingRearrangement,
+    preRearrangeOrder,
     reorderEvents,
     submitOrder,
     resetGame,

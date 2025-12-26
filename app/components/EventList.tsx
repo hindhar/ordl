@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers';
-import { useState } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { ClientEvent } from '@/hooks/useGame';
 import { EventCard } from './EventCard';
 
@@ -38,6 +38,9 @@ interface EventListProps {
   // Hybrid animation props
   solutionColorMap?: Map<string, boolean> | null;
   isColorTransitioning?: boolean;
+  // FLIP rearrangement animation
+  isAnimatingRearrangement?: boolean;
+  preRearrangeOrder?: ClientEvent[] | null;
 }
 
 export const EventList = ({
@@ -54,8 +57,66 @@ export const EventList = ({
   isSolutionRevealing = false,
   solutionColorMap = null,
   isColorTransitioning = false,
+  isAnimatingRearrangement = false,
+  preRearrangeOrder = null,
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // FLIP animation: store positions before rearrangement
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const previousPositions = useRef<Map<string, DOMRect>>(new Map());
+  const [flipTransforms, setFlipTransforms] = useState<Map<string, { x: number; y: number }>>(new Map());
+
+  // Capture positions when preRearrangeOrder is set (before the rearrangement)
+  useEffect(() => {
+    if (preRearrangeOrder && preRearrangeOrder.length > 0) {
+      // Store current positions of all cards
+      const positions = new Map<string, DOMRect>();
+      cardRefs.current.forEach((element, eventId) => {
+        positions.set(eventId, element.getBoundingClientRect());
+      });
+      previousPositions.current = positions;
+    }
+  }, [preRearrangeOrder]);
+
+  // Apply FLIP animation after DOM updates
+  useLayoutEffect(() => {
+    if (isAnimatingRearrangement && previousPositions.current.size > 0) {
+      // Calculate transforms: where each card needs to animate FROM
+      const transforms = new Map<string, { x: number; y: number }>();
+
+      cardRefs.current.forEach((element, eventId) => {
+        const previousRect = previousPositions.current.get(eventId);
+        const currentRect = element.getBoundingClientRect();
+
+        if (previousRect) {
+          // Calculate the delta - how far it moved
+          const deltaX = previousRect.left - currentRect.left;
+          const deltaY = previousRect.top - currentRect.top;
+
+          if (deltaX !== 0 || deltaY !== 0) {
+            transforms.set(eventId, { x: deltaX, y: deltaY });
+          }
+        }
+      });
+
+      setFlipTransforms(transforms);
+
+      // After a frame, trigger the animation by clearing transforms
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setFlipTransforms(new Map());
+        });
+      });
+    }
+  }, [isAnimatingRearrangement, events]);
+
+  // Clear transforms when animation ends
+  useEffect(() => {
+    if (!isAnimatingRearrangement) {
+      previousPositions.current.clear();
+    }
+  }, [isAnimatingRearrangement]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -200,24 +261,50 @@ export const EventList = ({
                 isIncorrect = !lastSubmitResults[index];
               }
 
+              // Get FLIP transform for this card
+              const flipTransform = flipTransforms.get(event.id);
+              const flipStyle: React.CSSProperties = flipTransform
+                ? {
+                    transform: `translate3d(${flipTransform.x}px, ${flipTransform.y}px, 0)`,
+                    transition: 'none',
+                  }
+                : isAnimatingRearrangement && flipTransforms.size === 0
+                  ? {
+                      transform: 'translate3d(0, 0, 0)',
+                      transition: 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    }
+                  : {};
+
               return (
-                <EventCard
+                <div
                   key={event.id}
-                  event={event}
-                  index={index}
-                  isLocked={isLocked || isGameOver}
-                  isCorrect={isCorrect}
-                  isIncorrect={isIncorrect}
-                  showDate={isGameOver}
-                  isGameOver={isGameOver}
-                  // Reveal animation props
-                  isRevealing={isRevealing}
-                  isRevealed={index <= revealedResultIndex}
-                  pendingResult={pendingResults ? pendingResults[index] : null}
-                  isDateRevealed={index <= revealedDateIndex}
-                  isSolutionRevealing={isSolutionRevealing}
-                  isColorTransitioning={isColorTransitioning}
-                />
+                  ref={(el) => {
+                    if (el) {
+                      cardRefs.current.set(event.id, el);
+                    } else {
+                      cardRefs.current.delete(event.id);
+                    }
+                  }}
+                  style={flipStyle}
+                  className={isAnimatingRearrangement ? 'flip-rearranging' : ''}
+                >
+                  <EventCard
+                    event={event}
+                    index={index}
+                    isLocked={isLocked || isGameOver}
+                    isCorrect={isCorrect}
+                    isIncorrect={isIncorrect}
+                    showDate={isGameOver}
+                    isGameOver={isGameOver}
+                    // Reveal animation props
+                    isRevealing={isRevealing}
+                    isRevealed={index <= revealedResultIndex}
+                    pendingResult={pendingResults ? pendingResults[index] : null}
+                    isDateRevealed={index <= revealedDateIndex}
+                    isSolutionRevealing={isSolutionRevealing}
+                    isColorTransitioning={isColorTransitioning}
+                  />
+                </div>
               );
             })}
           </div>

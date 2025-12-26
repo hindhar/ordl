@@ -133,7 +133,6 @@ export const EventCard = ({
         ${isLocked ? 'locked' : ''}
         ${isDragging ? 'dragging' : ''}
         ${isFlipping ? 'card-flip' : ''}
-        ${isSolutionRevealing ? 'solution-reveal' : ''}
         ${isColorTransitioning ? 'color-transition' : ''}
         flex items-center gap-4 p-4 rounded-xl border min-h-[76px]
         select-none
