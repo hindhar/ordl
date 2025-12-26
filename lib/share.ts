@@ -44,7 +44,7 @@ export const generateShareText = (data: ShareData): string => {
 
 ${grid}${streakLine}
 
-ordl.io`;
+Play Ordl at ordl.io`;
 };
 
 // Copy text to clipboard
