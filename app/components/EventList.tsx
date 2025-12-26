@@ -58,8 +58,8 @@ export const EventList = ({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 0,
-        tolerance: 8,
+        delay: 150, // Allow scroll before drag activates
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

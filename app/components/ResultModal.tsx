@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GameStats } from '@/lib/storage';
 import { generateGridRows, shareResults } from '@/lib/share';
 import { StatsDisplay } from './StatsDisplay';
@@ -30,6 +30,13 @@ export const ResultModal = ({
   onPractice,
 }: ResultModalProps) => {
   const [copied, setCopied] = useState(false);
+
+  // Reset copied state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCopied(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

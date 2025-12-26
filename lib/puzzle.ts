@@ -111,7 +111,7 @@ export const getTimeUntilNextPuzzle = (): { hours: number; minutes: number; seco
     ? new Date(todayAt3am.getTime() + 24 * 60 * 60 * 1000)
     : todayAt3am;
 
-  const diff = next3am.getTime() - now.getTime();
+  const diff = Math.max(0, next3am.getTime() - now.getTime());
 
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));

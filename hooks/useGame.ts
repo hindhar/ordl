@@ -377,6 +377,13 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
 
   // Reset current puzzle
   const resetGame = useCallback(async () => {
+    // Reset animation states first
+    setIsRevealing(false);
+    setRevealedResultIndex(-1);
+    setIsRevealingDates(false);
+    setRevealedDateIndex(-1);
+    setPendingResults(null);
+
     const puzzleData = await fetchPuzzle(puzzleNumber);
     if (!puzzleData) return;
 
@@ -396,6 +403,13 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     if (puzzleNum < 1 || puzzleNum > maxArchivePuzzle) {
       return;
     }
+
+    // Reset animation states first
+    setIsRevealing(false);
+    setRevealedResultIndex(-1);
+    setIsRevealingDates(false);
+    setRevealedDateIndex(-1);
+    setPendingResults(null);
 
     const puzzleData = await fetchPuzzle(puzzleNum);
     if (!puzzleData) return;
@@ -447,6 +461,13 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
 
   // Exit simulation and return to today's puzzle
   const exitSimulation = useCallback(async () => {
+    // Reset animation states first
+    setIsRevealing(false);
+    setRevealedResultIndex(-1);
+    setIsRevealingDates(false);
+    setRevealedDateIndex(-1);
+    setPendingResults(null);
+
     setIsSimulation(false);
 
     const puzzleData = await fetchPuzzle('today');
