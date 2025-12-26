@@ -6,14 +6,22 @@ export interface ShareData {
   isSimulation?: boolean;
 }
 
-// Generate Wordle-style grid: each row = one guess, each column = one position
+// Generate grid: each row = one position (6 rows), each column = one guess attempt
 export const generateGridRows = (attempts: boolean[][]): string[] => {
   if (attempts.length === 0) return [];
 
-  // Each row is one guess attempt, showing all 6 positions
-  return attempts.map((attempt) =>
-    attempt.map((correct) => (correct ? '🟩' : '🟥')).join('')
-  );
+  const numPositions = 6;
+  const rows: string[] = [];
+
+  // For each position (0-5), create a row showing that position across all guesses
+  for (let pos = 0; pos < numPositions; pos++) {
+    const row = attempts
+      .map((attempt) => (attempt[pos] ? '🟩' : '🟥'))
+      .join('');
+    rows.push(row);
+  }
+
+  return rows;
 };
 
 // Generate the share text with emoji grid - optimized for virality
@@ -23,7 +31,7 @@ export const generateShareText = (data: ShareData): string => {
   // Score format like Wordle: attempts/max or X for loss
   const score = won ? `${attempts.length}/4` : 'X/4';
 
-  // Build Wordle-style grid: each row = one guess
+  // Build grid: 6 rows (positions) x up to 4 columns (guesses)
   const grid = generateGridRows(attempts).join('\n');
 
   // Streak prominently displayed for social proof (only for non-practice games)
