@@ -74,7 +74,7 @@ export const EventCard = ({
         ${isLocked ? 'locked' : ''}
         ${justLocked ? 'just-locked' : ''}
         ${isDragging ? 'dragging' : ''}
-        flex items-center gap-4 p-4 rounded-xl border
+        flex items-center gap-4 p-4 rounded-xl border min-h-[76px]
         select-none
       `}
       {...attributes}
