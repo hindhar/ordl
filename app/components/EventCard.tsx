@@ -68,15 +68,17 @@ export const EventCard = ({
     disabled: isLocked,
   });
 
-  // Custom slower transition for smoother rearrangement around locked cards
-  // Default dnd-kit is ~200ms, we use 350ms for a more deliberate feel
-  const customTransition = 'transform 350ms cubic-bezier(0.25, 1, 0.5, 1)';
+  // Slower transition for rearrangement around locked cards
+  // Keep default ease feel, just longer duration (default is ~250ms)
+  const slowerTransition = transition
+    ? transition.replace(/(\d+)ms/, '400ms')
+    : 'transform 400ms ease';
 
   const style: React.CSSProperties = {
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
       : undefined,
-    transition: isDragging ? 'none' : customTransition,
+    transition: isDragging ? 'none' : slowerTransition,
     zIndex: isDragging ? 100 : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
   };
