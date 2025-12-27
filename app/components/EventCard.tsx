@@ -1,7 +1,7 @@
 'use client';
 
 import { useSortable } from '@dnd-kit/sortable';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ClientEvent } from '@/hooks/useGame';
 
 interface EventCardProps {
@@ -20,6 +20,8 @@ interface EventCardProps {
   isSolutionRevealing?: boolean;
   // Hybrid animation props
   isColorTransitioning?: boolean;
+  // Rearrangement animation state
+  isAnimatingRearrangement?: boolean;
 }
 
 export const EventCard = ({
@@ -36,6 +38,7 @@ export const EventCard = ({
   isDateRevealed = false,
   isSolutionRevealing = false,
   isColorTransitioning = false,
+  isAnimatingRearrangement = false,
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const wasRevealedRef = useRef(false);
@@ -43,35 +46,38 @@ export const EventCard = ({
   const wasLockedAtRevealStartRef = useRef(isLocked);
 
   // When a NEW reveal sequence starts, capture locked state and reset reveal tracking
-  useEffect(() => {
+  // Using useLayoutEffect to ensure this runs synchronously before paint,
+  // preventing race conditions with the flip animation trigger
+  useLayoutEffect(() => {
     if (isRevealing && !prevIsRevealingRef.current) {
       // New reveal sequence starting - capture whether this card is already locked
       wasLockedAtRevealStartRef.current = isLocked;
-      // Only reset wasRevealed for non-locked cards (locked cards don't need to flip)
-      if (!isLocked) {
-        wasRevealedRef.current = false;
-      }
+      // Reset wasRevealed for ALL cards at the start of each reveal sequence
+      wasRevealedRef.current = false;
     }
     prevIsRevealingRef.current = isRevealing;
   }, [isRevealing, isLocked]);
 
   // Trigger flip animation when this card is revealed
-  // Skip animation if card was already locked at the start of this reveal sequence
+  // Rules:
+  // 1. First guess: ALL cards flip
+  // 2. Second+ guess: Only cards NOT locked (not previously green) flip
+  // 3. Never flip during rearrangement animation
   useEffect(() => {
-    if (isRevealed && !wasRevealedRef.current) {
-      // Only flip cards that were NOT locked when the reveal started
-      // (locked cards are already showing as correct from previous guesses)
+    // Block flips during rearrangement to prevent extra animations
+    if (isAnimatingRearrangement) return;
+
+    if (isRevealing && isRevealed && !wasRevealedRef.current) {
+      wasRevealedRef.current = true;
+
+      // Only flip if card was NOT locked when this reveal sequence started
       if (!wasLockedAtRevealStartRef.current) {
         setIsFlipping(true);
-        wasRevealedRef.current = true;
         const timer = setTimeout(() => setIsFlipping(false), 600);
         return () => clearTimeout(timer);
-      } else {
-        // Card was locked at reveal start - mark as revealed but don't animate
-        wasRevealedRef.current = true;
       }
     }
-  }, [isRevealed]);
+  }, [isRevealing, isRevealed, isAnimatingRearrangement]);
 
   const {
     attributes,
@@ -130,10 +136,10 @@ export const EventCard = ({
       className={`
         event-card
         ${cardClasses}
-        ${isLocked ? 'locked' : ''}
+        ${isLocked && isCorrect ? 'locked' : ''}
+        ${isLocked && !isCorrect ? 'locked-incorrect' : ''}
         ${isDragging ? 'dragging' : ''}
         ${isFlipping ? 'card-flip' : ''}
-        ${isColorTransitioning ? 'color-transition' : ''}
         flex items-center gap-4 p-4 rounded-xl border min-h-[76px]
         select-none
       `}
@@ -143,11 +149,13 @@ export const EventCard = ({
       <div className={`
         flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
         text-sm font-display font-semibold transition-colors
-        ${isLocked
-          ? 'bg-correct text-white'
-          : isRevealing && isRevealed && pendingResult !== null
-            ? (pendingResult ? 'bg-correct text-white' : 'bg-incorrect text-white')
-            : 'bg-neutral border border-border-dark text-text-secondary'}
+        ${isGameOver
+          ? (isCorrect ? 'bg-correct text-white' : 'bg-incorrect text-white')
+          : isLocked
+            ? 'bg-correct text-white'
+            : isRevealing && isRevealed && pendingResult !== null
+              ? (pendingResult ? 'bg-correct text-white' : 'bg-incorrect text-white')
+              : 'bg-neutral border border-border-dark text-text-secondary'}
       `}>
         {index + 1}
       </div>
@@ -165,30 +173,57 @@ export const EventCard = ({
       </div>
 
       {/* Drag handle / Lock indicator - RIGHT */}
-      <div
-        className={`
-          drag-handle flex-shrink-0 flex flex-col items-center justify-center
-          ${isLocked || (isRevealing && isRevealed && pendingResult) ? 'w-6' : 'w-10 h-12 -my-2 -mr-2 rounded-lg'}
-          ${!isLocked && !isRevealing ? 'cursor-grab active:cursor-grabbing' : ''}
-        `}
-        {...(isLocked || isRevealing ? {} : listeners)}
-      >
-        {isLocked || (isRevealing && isRevealed && pendingResult) ? (
-          <svg className="checkmark-icon w-5 h-5 text-correct" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        ) : isRevealing && isRevealed && pendingResult === false ? (
-          <svg className="w-5 h-5 text-incorrect" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        ) : (
-          <div className="flex flex-col gap-[3px] opacity-40 hover:opacity-70 transition-opacity">
-            <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
-            <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
-            <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
+      {(() => {
+        // Determine what icon to show:
+        // 1. During reveal: use pendingResult
+        // 2. Game over: use isCorrect/isIncorrect to show final guess result
+        // 3. Playing with locked card: checkmark
+        // 4. Playing unlocked: drag handle
+        let showCheckmark = false;
+        let showX = false;
+
+        if (isRevealing && isRevealed && pendingResult !== null) {
+          // During flip reveal animation
+          showCheckmark = pendingResult === true;
+          showX = pendingResult === false;
+        } else if (isGameOver) {
+          // Final state - show result from final guess
+          showCheckmark = isCorrect === true;
+          showX = isIncorrect === true;
+        } else if (isLocked) {
+          // Mid-game locked cards (correct from previous guesses)
+          showCheckmark = true;
+        }
+
+        const showIcon = showCheckmark || showX;
+
+        return (
+          <div
+            className={`
+              drag-handle flex-shrink-0 flex flex-col items-center justify-center
+              ${showIcon ? 'w-6' : 'w-10 h-12 -my-2 -mr-2 rounded-lg'}
+              ${!isLocked && !isRevealing ? 'cursor-grab active:cursor-grabbing' : ''}
+            `}
+            {...(isLocked || isRevealing ? {} : listeners)}
+          >
+            {showCheckmark ? (
+              <svg className="checkmark-icon w-5 h-5 text-correct" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : showX ? (
+              <svg className="w-5 h-5 text-incorrect" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <div className="flex flex-col gap-[3px] opacity-40 hover:opacity-70 transition-opacity">
+                <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
+                <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
+                <div className="w-5 h-[2px] bg-text-secondary rounded-full"></div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
     </div>
   );
 };

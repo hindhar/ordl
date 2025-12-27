@@ -218,6 +218,14 @@ body {
   border-color: var(--correct-border);
 }
 
+/* Locked incorrect card - same behavior but keeps incorrect styling */
+.event-card.locked-incorrect {
+  cursor: default;
+  pointer-events: none;
+  background-color: var(--incorrect-bg);
+  border-color: var(--incorrect);
+}
+
 /* Modal backdrop */
 .modal-backdrop {
   animation: fadeIn 0.2s ease-out;

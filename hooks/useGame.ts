@@ -324,6 +324,10 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     setRevealedResultIndex(-1);
     setHasChangedSinceLastSubmit(false);
 
+    // Small delay to ensure React processes the reveal start state
+    // This allows EventCard effects to reset before the first card reveals
+    await delay(50);
+
     // Reveal results one by one (360ms each - 20% slower)
     for (let i = 0; i < EVENTS_PER_PUZZLE; i++) {
       await delay(360);
@@ -337,6 +341,10 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     const newAttempts = [...attempts, results];
     setAttempts(newAttempts);
     setLastSubmitResults(results);
+
+    // Clear pending results now that flip reveal is complete
+    // This prevents extra flips during subsequent animation phases
+    setPendingResults(null);
 
     const correctPositions = results
       .map((correct, index) => ({ correct, index }))
@@ -390,17 +398,8 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
           // 6. Pause so user can see where their mistakes were in correct order
           await delay(800);
 
-          // 7. Smooth color transition: fade all cards to green
-          setIsColorTransitioning(true);
-          await delay(600); // Duration of color transition animation
-
-          // 8. Set final state: all correct
-          setLastSubmitResults(Array(EVENTS_PER_PUZZLE).fill(true));
-          setSolutionColorMap(null);
-          setIsColorTransitioning(false);
-
-          // 9. Brief pause before date reveal
-          await delay(300);
+          // Keep solutionColorMap as final state - shows which cards user got right/wrong
+          // on their final guess, even though cards are now in correct order
         } else {
           // WON - just set solution immediately (cards already in correct order)
           setCurrentOrder(solution);

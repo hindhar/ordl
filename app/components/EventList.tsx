@@ -278,6 +278,8 @@ export const EventList = ({
                     isDateRevealed={index <= revealedDateIndex}
                     isSolutionRevealing={isSolutionRevealing}
                     isColorTransitioning={isColorTransitioning}
+                    // Rearrangement animation state
+                    isAnimatingRearrangement={isAnimatingRearrangement}
                   />
                 </div>
               );
