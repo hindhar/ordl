@@ -22,6 +22,8 @@ interface EventCardProps {
   isColorTransitioning?: boolean;
   // Rearrangement animation state
   isAnimatingRearrangement?: boolean;
+  // Reveal sequence tracking - increments each time a new reveal starts
+  revealSequenceId?: number;
 }
 
 export const EventCard = ({
@@ -39,24 +41,31 @@ export const EventCard = ({
   isSolutionRevealing = false,
   isColorTransitioning = false,
   isAnimatingRearrangement = false,
+  revealSequenceId = 0,
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const wasRevealedRef = useRef(false);
-  const prevIsRevealingRef = useRef(false);
+  // Track the last seen revealSequenceId to detect new reveal sequences
+  const lastSequenceIdRef = useRef(revealSequenceId);
   const wasLockedAtRevealStartRef = useRef(isLocked);
 
-  // When a NEW reveal sequence starts, capture locked state and reset reveal tracking
-  // Using useLayoutEffect to ensure this runs synchronously before paint,
-  // preventing race conditions with the flip animation trigger
+  // When a NEW reveal sequence starts (detected by sequence ID change),
+  // capture locked state and reset reveal tracking.
+  // Using useLayoutEffect to ensure this runs synchronously before paint.
+  // This is more reliable than detecting isRevealing transitions because:
+  // 1. We compare values, not effect ordering
+  // 2. The sequence ID changes exactly once per reveal
+  // 3. No race condition between effect scheduling
   useLayoutEffect(() => {
-    if (isRevealing && !prevIsRevealingRef.current) {
-      // New reveal sequence starting - capture whether this card is already locked
+    if (revealSequenceId !== lastSequenceIdRef.current) {
+      // New reveal sequence starting - ID has changed
+      lastSequenceIdRef.current = revealSequenceId;
+      // Capture whether this card is already locked at the start of this reveal
       wasLockedAtRevealStartRef.current = isLocked;
       // Reset wasRevealed for ALL cards at the start of each reveal sequence
       wasRevealedRef.current = false;
     }
-    prevIsRevealingRef.current = isRevealing;
-  }, [isRevealing, isLocked]);
+  }, [revealSequenceId, isLocked]);
 
   // Trigger flip animation when this card is revealed
   // Rules:

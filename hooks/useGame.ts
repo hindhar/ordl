@@ -53,6 +53,8 @@ export interface GameState {
   // FLIP rearrangement animation
   isAnimatingRearrangement: boolean;
   preRearrangeOrder: ClientEvent[] | null; // Order before rearrangement (for FLIP calculation)
+  // Unique ID that increments each reveal sequence - used by EventCard to detect new reveals reliably
+  revealSequenceId: number;
 }
 
 export interface GameActions {
@@ -139,6 +141,9 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   const [isColorTransitioning, setIsColorTransitioning] = useState(false);
   const [isAnimatingRearrangement, setIsAnimatingRearrangement] = useState(false);
   const [preRearrangeOrder, setPreRearrangeOrder] = useState<ClientEvent[] | null>(null);
+  // Unique ID that increments each time a new reveal sequence starts
+  // Used by EventCard to reliably detect new reveal sequences
+  const [revealSequenceId, setRevealSequenceId] = useState(0);
 
   // Calculate max archive puzzle (today - 1)
   const maxArchivePuzzle = Math.max(0, todaysPuzzle - 1);
@@ -319,6 +324,9 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     const isGameOver = checkResult.allCorrect || guessNumber >= MAX_GUESSES;
 
     // Store pending results and start reveal animation
+    // Increment sequence ID BEFORE starting reveal - this lets EventCard
+    // reliably detect a new reveal sequence regardless of React's effect timing
+    setRevealSequenceId(prev => prev + 1);
     setPendingResults(results);
     setIsRevealing(true);
     setRevealedResultIndex(-1);
@@ -618,6 +626,8 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     // FLIP rearrangement animation
     isAnimatingRearrangement,
     preRearrangeOrder,
+    // Reveal sequence tracking
+    revealSequenceId,
     reorderEvents,
     submitOrder,
     resetGame,
