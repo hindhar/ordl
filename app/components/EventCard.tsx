@@ -1,7 +1,7 @@
 'use client';
 
 import { useSortable } from '@dnd-kit/sortable';
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ClientEvent } from '@/hooks/useGame';
 
 interface EventCardProps {
@@ -24,6 +24,8 @@ interface EventCardProps {
   isAnimatingRearrangement?: boolean;
   // Reveal sequence tracking - increments each time a new reveal starts
   revealSequenceId?: number;
+  // Positions that were locked when this reveal started (passed from parent)
+  lockedAtRevealStart?: number[];
 }
 
 export const EventCard = ({
@@ -42,51 +44,41 @@ export const EventCard = ({
   isColorTransitioning = false,
   isAnimatingRearrangement = false,
   revealSequenceId = 0,
+  lockedAtRevealStart = [],
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
-  const wasRevealedRef = useRef(false);
-  // Track the last seen revealSequenceId to detect new reveal sequences
-  const lastSequenceIdRef = useRef(revealSequenceId);
-  const wasLockedAtRevealStartRef = useRef(isLocked);
+  // Track which reveal sequence we last flipped in (prevents double-flipping)
+  const lastFlippedInSequenceRef = useRef(-1);
 
-  // When a NEW reveal sequence starts (detected by sequence ID change),
-  // capture locked state and reset reveal tracking.
-  // Using useLayoutEffect to ensure this runs synchronously before paint.
-  // This is more reliable than detecting isRevealing transitions because:
-  // 1. We compare values, not effect ordering
-  // 2. The sequence ID changes exactly once per reveal
-  // 3. No race condition between effect scheduling
-  useLayoutEffect(() => {
-    if (revealSequenceId !== lastSequenceIdRef.current) {
-      // New reveal sequence starting - ID has changed
-      lastSequenceIdRef.current = revealSequenceId;
-      // Capture whether this card is already locked at the start of this reveal
-      wasLockedAtRevealStartRef.current = isLocked;
-      // Reset wasRevealed for ALL cards at the start of each reveal sequence
-      wasRevealedRef.current = false;
-    }
-  }, [revealSequenceId, isLocked]);
+  // Determine if this card was locked at the start of the current reveal
+  // This is passed from the parent (useGame) to ensure consistency
+  const wasLockedAtRevealStart = lockedAtRevealStart.includes(index);
 
   // Trigger flip animation when this card is revealed
   // Rules:
-  // 1. First guess: ALL cards flip
-  // 2. Second+ guess: Only cards NOT locked (not previously green) flip
+  // 1. First guess: ALL cards flip (lockedAtRevealStart is empty)
+  // 2. Second+ guess: Only cards NOT in lockedAtRevealStart flip
   // 3. Never flip during rearrangement animation
+  // 4. Only flip once per reveal sequence (tracked by revealSequenceId)
   useEffect(() => {
     // Block flips during rearrangement to prevent extra animations
     if (isAnimatingRearrangement) return;
 
-    if (isRevealing && isRevealed && !wasRevealedRef.current) {
-      wasRevealedRef.current = true;
-
-      // Only flip if card was NOT locked when this reveal sequence started
-      if (!wasLockedAtRevealStartRef.current) {
-        setIsFlipping(true);
-        const timer = setTimeout(() => setIsFlipping(false), 600);
-        return () => clearTimeout(timer);
-      }
+    // Only flip if:
+    // 1. Currently in a reveal sequence
+    // 2. This specific card has been revealed
+    // 3. We haven't already flipped for this sequence
+    // 4. Card was NOT locked when this reveal started
+    if (isRevealing && isRevealed &&
+        revealSequenceId !== lastFlippedInSequenceRef.current &&
+        !wasLockedAtRevealStart) {
+      // Mark that we've flipped for this sequence
+      lastFlippedInSequenceRef.current = revealSequenceId;
+      setIsFlipping(true);
+      const timer = setTimeout(() => setIsFlipping(false), 600);
+      return () => clearTimeout(timer);
     }
-  }, [isRevealing, isRevealed, isAnimatingRearrangement]);
+  }, [isRevealing, isRevealed, isAnimatingRearrangement, revealSequenceId, wasLockedAtRevealStart]);
 
   const {
     attributes,

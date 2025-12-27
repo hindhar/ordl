@@ -46,6 +46,7 @@ interface EventListProps {
   preRearrangeOrder?: ClientEvent[] | null;
   // Reveal sequence tracking
   revealSequenceId?: number;
+  lockedAtRevealStart?: number[];
 }
 
 export const EventList = ({
@@ -65,6 +66,7 @@ export const EventList = ({
   isAnimatingRearrangement = false,
   preRearrangeOrder = null,
   revealSequenceId = 0,
+  lockedAtRevealStart = [],
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -285,6 +287,7 @@ export const EventList = ({
                     isAnimatingRearrangement={isAnimatingRearrangement}
                     // Reveal sequence tracking
                     revealSequenceId={revealSequenceId}
+                    lockedAtRevealStart={lockedAtRevealStart}
                   />
                 </div>
               );

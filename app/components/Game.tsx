@@ -77,6 +77,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     preRearrangeOrder,
     // Reveal sequence tracking
     revealSequenceId,
+    lockedAtRevealStart,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -144,6 +145,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
           isAnimatingRearrangement={isAnimatingRearrangement}
           preRearrangeOrder={preRearrangeOrder}
           revealSequenceId={revealSequenceId}
+          lockedAtRevealStart={lockedAtRevealStart}
         />
 
         {status === 'playing' && (

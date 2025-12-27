@@ -55,6 +55,9 @@ export interface GameState {
   preRearrangeOrder: ClientEvent[] | null; // Order before rearrangement (for FLIP calculation)
   // Unique ID that increments each reveal sequence - used by EventCard to detect new reveals reliably
   revealSequenceId: number;
+  // Positions that were locked when the current reveal sequence started
+  // This is passed to EventCard so it knows which cards should NOT flip
+  lockedAtRevealStart: number[];
 }
 
 export interface GameActions {
@@ -144,6 +147,9 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   // Unique ID that increments each time a new reveal sequence starts
   // Used by EventCard to reliably detect new reveal sequences
   const [revealSequenceId, setRevealSequenceId] = useState(0);
+  // Positions that were locked when the current reveal started
+  // Captured at reveal start and passed to EventCard to know which cards should NOT flip
+  const [lockedAtRevealStart, setLockedAtRevealStart] = useState<number[]>([]);
 
   // Calculate max archive puzzle (today - 1)
   const maxArchivePuzzle = Math.max(0, todaysPuzzle - 1);
@@ -324,6 +330,10 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     const isGameOver = checkResult.allCorrect || guessNumber >= MAX_GUESSES;
 
     // Store pending results and start reveal animation
+    // CRITICAL: Capture locked positions BEFORE incrementing sequence ID
+    // This is passed to EventCard so it knows exactly which cards should NOT flip
+    // Using a snapshot ensures consistency even with React's batched updates
+    setLockedAtRevealStart([...lockedPositions]);
     // Increment sequence ID BEFORE starting reveal - this lets EventCard
     // reliably detect a new reveal sequence regardless of React's effect timing
     setRevealSequenceId(prev => prev + 1);
@@ -628,6 +638,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     preRearrangeOrder,
     // Reveal sequence tracking
     revealSequenceId,
+    lockedAtRevealStart,
     reorderEvents,
     submitOrder,
     resetGame,
