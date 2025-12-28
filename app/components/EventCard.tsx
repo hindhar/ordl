@@ -22,10 +22,10 @@ interface EventCardProps {
   isColorTransitioning?: boolean;
   // Rearrangement animation state
   isAnimatingRearrangement?: boolean;
-  // Reveal sequence tracking - increments each time a new reveal starts
-  revealSequenceId?: number;
-  // Positions that were locked when this reveal started (passed from parent)
-  lockedAtRevealStart?: number[];
+  // First principles flip logic - previous attempts results
+  previousAttempts?: boolean[][];
+  // Current guess index (0-indexed)
+  currentGuessIndex?: number;
 }
 
 export const EventCard = ({
@@ -43,42 +43,52 @@ export const EventCard = ({
   isSolutionRevealing = false,
   isColorTransitioning = false,
   isAnimatingRearrangement = false,
-  revealSequenceId = 0,
-  lockedAtRevealStart = [],
+  previousAttempts = [],
+  currentGuessIndex = 0,
 }: EventCardProps) => {
   const [isFlipping, setIsFlipping] = useState(false);
-  // Track which reveal sequence we last flipped in (prevents double-flipping)
-  const lastFlippedInSequenceRef = useRef(-1);
+  // Track which guess we last flipped in (prevents double-flipping within same guess)
+  const lastFlippedGuessRef = useRef(-1);
 
-  // Determine if this card was locked at the start of the current reveal
-  // This is passed from the parent (useGame) to ensure consistency
-  const wasLockedAtRevealStart = lockedAtRevealStart.includes(index);
+  // FIRST PRINCIPLES FLIP LOGIC:
+  // A card should flip if it has NEVER been correct in any previous guess.
+  // This is the simple rule that governs everything.
+  const wasEverCorrectBefore = previousAttempts.some(
+    (attempt) => attempt[index] === true
+  );
+  const shouldFlipThisGuess = !wasEverCorrectBefore;
 
   // Trigger flip animation when this card is revealed
-  // Rules:
-  // 1. First guess: ALL cards flip (lockedAtRevealStart is empty)
-  // 2. Second+ guess: Only cards NOT in lockedAtRevealStart flip
+  // Rules (simplified):
+  // 1. First guess (currentGuessIndex === 0): ALL cards flip
+  // 2. Later guesses: Only cards that were NEVER correct before flip
   // 3. Never flip during rearrangement animation
-  // 4. Only flip once per reveal sequence (tracked by revealSequenceId)
+  // 4. Only flip once per guess (tracked by currentGuessIndex)
   useEffect(() => {
     // Block flips during rearrangement to prevent extra animations
     if (isAnimatingRearrangement) return;
 
-    // Only flip if:
-    // 1. Currently in a reveal sequence
-    // 2. This specific card has been revealed
-    // 3. We haven't already flipped for this sequence
-    // 4. Card was NOT locked when this reveal started
-    if (isRevealing && isRevealed &&
-        revealSequenceId !== lastFlippedInSequenceRef.current &&
-        !wasLockedAtRevealStart) {
-      // Mark that we've flipped for this sequence
-      lastFlippedInSequenceRef.current = revealSequenceId;
-      setIsFlipping(true);
-      const timer = setTimeout(() => setIsFlipping(false), 600);
-      return () => clearTimeout(timer);
+    // Debug logging
+    if (isRevealing && isRevealed) {
+      console.log(`Card ${index}: isRevealing=${isRevealing}, isRevealed=${isRevealed}, currentGuessIndex=${currentGuessIndex}, lastFlipped=${lastFlippedGuessRef.current}, shouldFlip=${shouldFlipThisGuess}, wasEverCorrect=${wasEverCorrectBefore}, prevAttempts=`, previousAttempts);
     }
-  }, [isRevealing, isRevealed, isAnimatingRearrangement, revealSequenceId, wasLockedAtRevealStart]);
+
+    // Only flip if:
+    // 1. Currently revealing AND this card has been revealed
+    // 2. We haven't already flipped for this guess
+    // 3. This card should flip (never been correct before)
+    if (isRevealing && isRevealed &&
+        currentGuessIndex !== lastFlippedGuessRef.current &&
+        shouldFlipThisGuess) {
+      // Mark that we've flipped for this guess
+      lastFlippedGuessRef.current = currentGuessIndex;
+      setIsFlipping(true);
+      // Don't use cleanup to clear this timer - the animation should complete
+      // regardless of state changes. This is especially important for the last
+      // card which reveals right before state updates happen.
+      setTimeout(() => setIsFlipping(false), 600);
+    }
+  }, [isRevealing, isRevealed, isAnimatingRearrangement, currentGuessIndex, shouldFlipThisGuess]);
 
   const {
     attributes,

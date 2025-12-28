@@ -82,8 +82,8 @@ export const EVENTS: HistoricalEvent[] = [
   { id: "titanic_film", event: "Titanic film released", year: 1997, fullDate: "December 19, 1997", emoji: "🚢" },
 
   // Puzzle 10: 1989-1994 Mix
-  { id: "tiananmen", event: "Tiananmen Square protests", year: 1989, fullDate: "June 4, 1989", emoji: "🕯️" },
   { id: "exxon", event: "Exxon Valdez oil spill", year: 1989, fullDate: "March 24, 1989", emoji: "🛢️" },
+  { id: "tiananmen", event: "Tiananmen Square protests", year: 1989, fullDate: "June 4, 1989", emoji: "🕯️" },
   { id: "hubble", event: "Hubble Telescope launched", year: 1990, fullDate: "April 24, 1990", emoji: "🔭" },
   { id: "ussr", event: "Soviet Union dissolves", year: 1991, fullDate: "December 26, 1991", emoji: "🇷🇺" },
   { id: "la_riots", event: "LA Riots", year: 1992, fullDate: "April 29, 1992", emoji: "🔥" },

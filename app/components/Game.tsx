@@ -75,9 +75,6 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     // FLIP rearrangement animation
     isAnimatingRearrangement,
     preRearrangeOrder,
-    // Reveal sequence tracking
-    revealSequenceId,
-    lockedAtRevealStart,
     reorderEvents,
     submitOrder,
     resetGame,
@@ -144,8 +141,8 @@ export const Game = ({ initialPuzzle }: GameProps) => {
           isColorTransitioning={isColorTransitioning}
           isAnimatingRearrangement={isAnimatingRearrangement}
           preRearrangeOrder={preRearrangeOrder}
-          revealSequenceId={revealSequenceId}
-          lockedAtRevealStart={lockedAtRevealStart}
+          previousAttempts={attempts}
+          currentGuessIndex={attempts.length}
         />
 
         {status === 'playing' && (

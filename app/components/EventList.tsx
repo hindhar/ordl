@@ -44,9 +44,10 @@ interface EventListProps {
   // Slide rearrangement animation
   isAnimatingRearrangement?: boolean;
   preRearrangeOrder?: ClientEvent[] | null;
-  // Reveal sequence tracking
-  revealSequenceId?: number;
-  lockedAtRevealStart?: number[];
+  // Previous attempts - used to determine if card should flip
+  previousAttempts?: boolean[][];
+  // Current guess number (0-indexed, for flip detection)
+  currentGuessIndex?: number;
 }
 
 export const EventList = ({
@@ -65,8 +66,8 @@ export const EventList = ({
   isColorTransitioning = false,
   isAnimatingRearrangement = false,
   preRearrangeOrder = null,
-  revealSequenceId = 0,
-  lockedAtRevealStart = [],
+  previousAttempts = [],
+  currentGuessIndex = 0,
 }: EventListProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -285,9 +286,9 @@ export const EventList = ({
                     isColorTransitioning={isColorTransitioning}
                     // Rearrangement animation state
                     isAnimatingRearrangement={isAnimatingRearrangement}
-                    // Reveal sequence tracking
-                    revealSequenceId={revealSequenceId}
-                    lockedAtRevealStart={lockedAtRevealStart}
+                    // First principles flip logic: pass previous attempts
+                    previousAttempts={previousAttempts}
+                    currentGuessIndex={currentGuessIndex}
                   />
                 </div>
               );

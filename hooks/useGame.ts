@@ -53,11 +53,6 @@ export interface GameState {
   // FLIP rearrangement animation
   isAnimatingRearrangement: boolean;
   preRearrangeOrder: ClientEvent[] | null; // Order before rearrangement (for FLIP calculation)
-  // Unique ID that increments each reveal sequence - used by EventCard to detect new reveals reliably
-  revealSequenceId: number;
-  // Positions that were locked when the current reveal sequence started
-  // This is passed to EventCard so it knows which cards should NOT flip
-  lockedAtRevealStart: number[];
 }
 
 export interface GameActions {
@@ -144,12 +139,6 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   const [isColorTransitioning, setIsColorTransitioning] = useState(false);
   const [isAnimatingRearrangement, setIsAnimatingRearrangement] = useState(false);
   const [preRearrangeOrder, setPreRearrangeOrder] = useState<ClientEvent[] | null>(null);
-  // Unique ID that increments each time a new reveal sequence starts
-  // Used by EventCard to reliably detect new reveal sequences
-  const [revealSequenceId, setRevealSequenceId] = useState(0);
-  // Positions that were locked when the current reveal started
-  // Captured at reveal start and passed to EventCard to know which cards should NOT flip
-  const [lockedAtRevealStart, setLockedAtRevealStart] = useState<number[]>([]);
 
   // Calculate max archive puzzle (today - 1)
   const maxArchivePuzzle = Math.max(0, todaysPuzzle - 1);
@@ -330,20 +319,14 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     const isGameOver = checkResult.allCorrect || guessNumber >= MAX_GUESSES;
 
     // Store pending results and start reveal animation
-    // CRITICAL: Capture locked positions BEFORE incrementing sequence ID
-    // This is passed to EventCard so it knows exactly which cards should NOT flip
-    // Using a snapshot ensures consistency even with React's batched updates
-    setLockedAtRevealStart([...lockedPositions]);
-    // Increment sequence ID BEFORE starting reveal - this lets EventCard
-    // reliably detect a new reveal sequence regardless of React's effect timing
-    setRevealSequenceId(prev => prev + 1);
+    // The flip logic in EventCard now uses the attempts history directly,
+    // so we don't need complex snapshot/sequence tracking
     setPendingResults(results);
     setIsRevealing(true);
     setRevealedResultIndex(-1);
     setHasChangedSinceLastSubmit(false);
 
-    // Small delay to ensure React processes the reveal start state
-    // This allows EventCard effects to reset before the first card reveals
+    // Small delay before starting reveal
     await delay(50);
 
     // Reveal results one by one (360ms each - 20% slower)
@@ -636,9 +619,6 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
     // FLIP rearrangement animation
     isAnimatingRearrangement,
     preRearrangeOrder,
-    // Reveal sequence tracking
-    revealSequenceId,
-    lockedAtRevealStart,
     reorderEvents,
     submitOrder,
     resetGame,
