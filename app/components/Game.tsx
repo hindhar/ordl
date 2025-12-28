@@ -53,7 +53,7 @@ export const Game = ({ initialPuzzle }: GameProps) => {
     currentOrder,
     lockedPositions,
     attempts,
-    mistakes,
+    mistakes: _mistakes,
     status,
     stats,
     isLoading,

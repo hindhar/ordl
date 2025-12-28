@@ -35,7 +35,7 @@ function getShuffledPuzzleEvents(puzzleNumber: number): HistoricalEvent[] {
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const puzzleId = params.id;

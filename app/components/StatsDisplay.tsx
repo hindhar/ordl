@@ -44,11 +44,11 @@ export const StatsDisplay = ({ stats, lastGuessCount }: StatsDisplayProps) => {
 
             return (
               <div key={index} className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-text-secondary w-3">{index + 1}</span>
+                <span className={`text-xs font-medium w-3 ${isHighlighted ? 'text-correct' : 'text-text-secondary'}`}>{index + 1}</span>
                 <div className="flex-grow h-4 bg-neutral rounded overflow-hidden">
                   <div
                     className={`h-full flex items-center justify-end px-1.5 rounded transition-all ${
-                      count > 0 ? 'bg-correct' : 'bg-border'
+                      isHighlighted ? 'bg-accent' : count > 0 ? 'bg-correct' : 'bg-border'
                     }`}
                     style={{ width: `${Math.max(percentage, count > 0 ? 8 : 0)}%` }}
                   >

@@ -10,6 +10,7 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  Announcements,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -18,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ClientEvent } from '@/hooks/useGame';
 import { EventCard } from './EventCard';
 
@@ -58,7 +59,7 @@ export const EventList = ({
   onReorder,
   isRevealing = false,
   revealedResultIndex = -1,
-  isRevealingDates = false,
+  isRevealingDates: _isRevealingDates = false,
   revealedDateIndex = -1,
   pendingResults = null,
   isSolutionRevealing = false,
@@ -69,10 +70,46 @@ export const EventList = ({
   previousAttempts = [],
   currentGuessIndex = 0,
 }: EventListProps) => {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [_activeId, setActiveId] = useState<string | null>(null);
 
   // Track animation phase: 'offset' = cards at old positions, 'animating' = transitioning to new
   const [animationPhase, setAnimationPhase] = useState<'idle' | 'offset' | 'animating'>('idle');
+
+  // Screen reader announcements for drag-and-drop
+  const announcements: Announcements = useMemo(() => {
+    const getName = (id: string): string => {
+      const event = events.find((e) => e.id === id);
+      return event?.event ?? 'Event';
+    };
+
+    return {
+      onDragStart({ active }) {
+        const eventName = getName(active.id as string);
+        return `Picked up ${eventName}. Use arrow keys to move, space to drop.`;
+      },
+      onDragOver({ active, over }) {
+        if (over) {
+          const eventName = getName(active.id as string);
+          const overIndex = events.findIndex((e) => e.id === over.id);
+          return `${eventName} is now at position ${overIndex + 1} of 6.`;
+        }
+        return undefined;
+      },
+      onDragEnd({ active, over }) {
+        if (over) {
+          const eventName = getName(active.id as string);
+          const newIndex = events.findIndex((e) => e.id === over.id);
+          return `Dropped ${eventName} at position ${newIndex + 1} of 6.`;
+        }
+        const eventName = getName(active.id as string);
+        return `${eventName} was dropped.`;
+      },
+      onDragCancel({ active }) {
+        const eventName = getName(active.id as string);
+        return `Drag cancelled. ${eventName} returned to original position.`;
+      },
+    };
+  }, [events]);
 
   // When rearrangement starts, begin at offset phase, then trigger animation
   useEffect(() => {
@@ -214,6 +251,12 @@ export const EventList = ({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
+        accessibility={{
+          announcements,
+          screenReaderInstructions: {
+            draggable: 'To pick up a draggable item, press space or enter. While dragging, use the arrow keys to move the item. Press space or enter again to drop the item in its new position, or press escape to cancel.',
+          },
+        }}
       >
         <SortableContext
           items={events.map((e) => e.id)}

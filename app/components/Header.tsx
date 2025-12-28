@@ -18,7 +18,7 @@ interface HeaderProps {
 export const Header = ({
   puzzleNumber,
   isSimulation,
-  totalPuzzles,
+  totalPuzzles: _totalPuzzles,
   maxArchivePuzzle,
   onPrevPuzzle,
   onNextPuzzle,

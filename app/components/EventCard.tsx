@@ -40,8 +40,8 @@ export const EventCard = ({
   isRevealed = false,
   pendingResult = null,
   isDateRevealed = false,
-  isSolutionRevealing = false,
-  isColorTransitioning = false,
+  isSolutionRevealing: _isSolutionRevealing = false,
+  isColorTransitioning: _isColorTransitioning = false,
   isAnimatingRearrangement = false,
   previousAttempts = [],
   currentGuessIndex = 0,
@@ -68,10 +68,6 @@ export const EventCard = ({
     // Block flips during rearrangement to prevent extra animations
     if (isAnimatingRearrangement) return;
 
-    // Debug logging
-    if (isRevealing && isRevealed) {
-      console.log(`Card ${index}: isRevealing=${isRevealing}, isRevealed=${isRevealed}, currentGuessIndex=${currentGuessIndex}, lastFlipped=${lastFlippedGuessRef.current}, shouldFlip=${shouldFlipThisGuess}, wasEverCorrect=${wasEverCorrectBefore}, prevAttempts=`, previousAttempts);
-    }
 
     // Only flip if:
     // 1. Currently revealing AND this card has been revealed
@@ -95,7 +91,6 @@ export const EventCard = ({
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
   } = useSortable({
     id: event.id,

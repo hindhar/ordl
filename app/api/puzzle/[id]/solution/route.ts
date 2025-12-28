@@ -3,7 +3,7 @@ import { EVENTS, EVENTS_PER_PUZZLE, TOTAL_PUZZLES } from '@/lib/events';
 import { getTodaysPuzzleNumber } from '@/lib/puzzle';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const puzzleId = params.id;

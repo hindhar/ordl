@@ -34,11 +34,11 @@ const defaultStats: GameStats = {
 
 // Load stats from localStorage
 export const loadStats = (): GameStats => {
-  if (typeof window === 'undefined') return defaultStats;
+  if (typeof window === 'undefined') return { ...defaultStats, guessDistribution: [...defaultStats.guessDistribution] };
 
   try {
     const stored = localStorage.getItem(STATS_KEY);
-    if (!stored) return defaultStats;
+    if (!stored) return { ...defaultStats, guessDistribution: [...defaultStats.guessDistribution] };
 
     const stats = JSON.parse(stored) as GameStats;
 
@@ -64,7 +64,7 @@ export const loadStats = (): GameStats => {
 
     return stats;
   } catch {
-    return defaultStats;
+    return { ...defaultStats, guessDistribution: [...defaultStats.guessDistribution] };
   }
 };
 

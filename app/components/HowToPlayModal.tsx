@@ -1,5 +1,7 @@
 'use client';
 
+import { FocusTrap } from './FocusTrap';
+
 interface HowToPlayModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -9,12 +11,22 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-text-primary/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-secondary rounded-2xl p-6 max-w-sm w-full animate-slide-up shadow-xl border border-border relative">
-        {/* Close button */}
+    <div
+      className="modal-backdrop fixed inset-0 bg-text-primary/60 flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      role="presentation"
+    >
+      <FocusTrap isActive={isOpen} onEscape={onClose}>
+        <div
+          className="bg-bg-secondary rounded-2xl p-6 max-w-sm w-full animate-slide-up shadow-xl border border-border relative"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="how-to-play-title"
+        >
+        {/* Close button - 44px minimum touch target */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors rounded-full hover:bg-neutral"
+          className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors rounded-full hover:bg-neutral"
           aria-label="Close"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -24,7 +36,7 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-display font-bold text-text-primary">How to Play</h2>
+          <h2 id="how-to-play-title" className="text-2xl font-display font-bold text-text-primary">How to Play</h2>
           <p className="text-text-secondary text-sm mt-1">Order 6 historical events chronologically</p>
         </div>
 
@@ -95,14 +107,15 @@ export const HowToPlayModal = ({ isOpen, onClose }: HowToPlayModalProps) => {
           New puzzle every day at midnight
         </p>
 
-        {/* Play button */}
+        {/* Play button - 44px minimum height */}
         <button
           onClick={onClose}
-          className="btn-primary w-full mt-6 text-lg"
+          className="btn-primary w-full mt-6 text-lg min-h-[44px]"
         >
           Got it!
         </button>
-      </div>
+        </div>
+      </FocusTrap>
     </div>
   );
 };

@@ -126,7 +126,7 @@ export const useGame = (initialPuzzle?: number): GameState & GameActions => {
   const [lastSubmitResults, setLastSubmitResults] = useState<boolean[] | null>(null);
   const [hasChangedSinceLastSubmit, setHasChangedSinceLastSubmit] = useState(true);
   const [isSimulation, setIsSimulation] = useState(false);
-  const [totalPuzzles, setTotalPuzzles] = useState(70);
+  const [totalPuzzles, _setTotalPuzzles] = useState(70);
 
   // Reveal animation state
   const [isRevealing, setIsRevealing] = useState(false);
