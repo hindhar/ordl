@@ -80,9 +80,15 @@ export const getShuffledPuzzleEvents = (puzzleNumber: number): HistoricalEvent[]
   return shuffleWithSeed(events, puzzleNumber * 31337);
 };
 
-// Get the correct order (sorted by year, oldest first)
+// Parse fullDate string (e.g., "March 24, 1989") to timestamp for sorting
+const parseFullDate = (fullDate: string): number => {
+  const date = new Date(fullDate);
+  return date.getTime();
+};
+
+// Get the correct order (sorted by full date, oldest first)
 export const getCorrectOrder = (events: HistoricalEvent[]): HistoricalEvent[] => {
-  return [...events].sort((a, b) => a.year - b.year);
+  return [...events].sort((a, b) => parseFullDate(a.fullDate) - parseFullDate(b.fullDate));
 };
 
 // Check if an event is in the correct position
